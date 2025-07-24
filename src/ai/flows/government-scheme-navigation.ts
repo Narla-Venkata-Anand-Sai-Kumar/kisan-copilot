@@ -83,7 +83,7 @@ const schemesPrompt = ai.definePrompt({
     answer: z.string().describe('The answer to the query about government schemes.'),
   })},
   tools: [getSchemeInfoTool],
-  prompt: `You are an expert agent specializing in Indian government schemes for farmers. Your task is to provide a detailed and helpful response to user questions.
+  prompt: `You are an expert agent specializing in Indian government schemes for farmers. Your task is to provide a detailed and helpful response to user questions in valid JSON format.
 
 Follow these steps:
 1.  Use the 'getSchemeInfo' tool to search for the most relevant information regarding the user's query.
