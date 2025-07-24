@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
+import { getMarketData } from '@/services/market-data-service';
 
 const MarketPriceForecastingInputSchema = z.object({
   crop: z.string().describe('The crop for which to forecast the market price.'),
@@ -31,6 +32,24 @@ export type MarketPriceForecastingOutput = z.infer<typeof MarketPriceForecasting
 export async function marketPriceForecasting(input: MarketPriceForecastingInput): Promise<MarketPriceForecastingOutput> {
   return marketPriceForecastingFlow(input);
 }
+
+const getMarketPriceTool = ai.defineTool(
+    {
+      name: 'getMarketPrice',
+      description: 'Gets the current market price for a given crop and location.',
+      inputSchema: z.object({
+        crop: z.string(),
+        location: z.string(),
+      }),
+      outputSchema: z.object({
+        price: z.number(),
+        unit: z.string(),
+      }),
+    },
+    async (input) => {
+        return getMarketData(input.crop, input.location);
+    }
+);
 
 async function toWav(
   pcmData: Buffer,
@@ -66,8 +85,10 @@ const marketPriceForecastingPrompt = ai.definePrompt({
     forecast: z.string().describe('The market price forecast for the specified crop and location in the specified language.'),
     suggestion: z.string().describe('A selling suggestion based on the market price forecast in the specified language.'),
   })},
-  prompt: `You are an AI assistant providing market price forecasts and selling suggestions to farmers.
-
+  tools: [getMarketPriceTool],
+  prompt: `You are an AI assistant providing market price forecasts and selling suggestions to farmers. 
+  Use the getMarketPrice tool to fetch the current price per quintal for the given crop and location.
+  
   Provide the forecast and suggestion in the specified language.
   
   Language: {{{language}}}
