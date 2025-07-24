@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { HelpCircle, Bot } from 'lucide-react';
+import { HelpCircle, Bot, Mic, Square, Loader2, User } from 'lucide-react';
 import { navigateGovernmentSchemes } from '@/ai/flows/government-scheme-navigation';
+import { transcribeSchemeQuery } from '@/ai/flows/transcribe-scheme-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,16 +13,20 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { translations } from '@/lib/i18n';
 
+type Status = 'idle' | 'recording' | 'processing-audio' | 'processing-text';
+
 interface SchemeNavigationProps {
   language: string;
 }
 
 export default function SchemeNavigation({ language }: SchemeNavigationProps) {
   const [query, setQuery] = useState('');
-  const [result, setResult] = useState<{ answer: string, audioOutput: string } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<{ answer: string; audioOutput: string } | null>(null);
+  const [status, setStatus] = useState<Status>('idle');
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const t = translations[language];
 
@@ -42,28 +47,88 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
   useEffect(() => {
     if (result?.audioOutput && audioRef.current) {
       audioRef.current.src = result.audioOutput;
+      audioRef.current.play();
     }
   }, [result]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const startRecording = async () => {
+    setResult(null);
+    setQuery('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+      mediaRecorderRef.current.onstop = handleStopRecording;
+      audioChunksRef.current = [];
+      mediaRecorderRef.current.start();
+      setStatus('recording');
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast({
+        title: t.microphoneError,
+        description: t.microphoneErrorDescription,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && status === 'recording') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
+  };
+
+  const handleStopRecording = async () => {
+    setStatus('processing-audio');
+    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    reader.onloadend = async () => {
+      const audioDataUri = reader.result as string;
+      try {
+        const response = await transcribeSchemeQuery({ audioDataUri, language });
+        setQuery(response.transcribedText);
+        // Automatically trigger the search after transcription
+        await handleSearch(response.transcribedText);
+      } catch (error) {
+        console.error('Error with voice interaction:', error);
+        toast({
+          title: t.aiError,
+          description: t.failedToProcessVoice,
+          variant: 'destructive',
+        });
+        setStatus('idle');
+      }
+    };
+  };
+
+  const handleTextSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query) {
+    await handleSearch(query);
+  };
+  
+  const handleSearch = async (searchText: string) => {
+    if (!searchText) {
       toast({
         title: t.questionIsEmpty,
         description: t.enterYourQuestion,
         variant: 'destructive',
       });
+      setStatus('idle');
       return;
     }
 
-    setIsLoading(true);
+    setStatus('processing-text');
     setResult(null);
-    if(audioRef.current) {
+    if (audioRef.current) {
       audioRef.current.pause();
     }
 
     try {
-      const response = await navigateGovernmentSchemes({ query, language });
+      const response = await navigateGovernmentSchemes({ query: searchText, language });
       setResult(response);
     } catch (error) {
       console.error('Error fetching scheme information:', error);
@@ -73,9 +138,11 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setStatus('idle');
     }
   };
+
+  const isLoading = status === 'processing-audio' || status === 'processing-text';
 
   return (
     <Card className="shadow-lg">
@@ -84,7 +151,7 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
         <CardDescription>{t.schemeNavigatorDescription}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleTextSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="query">{t.yourQuestion}</Label>
             <Textarea
@@ -93,25 +160,47 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               rows={4}
+              disabled={isLoading}
             />
           </div>
-          <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-            <HelpCircle className="mr-2 h-4 w-4" />
-            {isLoading ? t.searching : t.askQuestion}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button type="submit" disabled={isLoading || !query} className="w-full sm:w-auto">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              {status === 'processing-text' ? t.searching : t.askQuestion}
+            </Button>
+            {status === 'recording' ? (
+              <Button onClick={stopRecording} variant="destructive" className="w-full sm:w-auto">
+                <Square className="mr-2 h-4 w-4" /> {t.stopRecording}
+              </Button>
+            ) : (
+              <Button onClick={startRecording} disabled={isLoading} variant="outline" className="w-full sm:w-auto">
+                <Mic className="mr-2 h-4 w-4" />
+                {status === 'processing-audio' ? t.processing : t.askWithVoice}
+              </Button>
+            )}
+          </div>
         </form>
 
         {isLoading && (
-          <div className="space-y-4 pt-6">
-            <Skeleton className="h-6 w-1/3" />
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-5 w-5/6" />
+          <div className="flex items-center gap-2 pt-6">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>
+              {status === 'processing-audio' ? t.transcribing : t.searching}
+            </span>
           </div>
         )}
 
         {result && (
           <div className="pt-6 space-y-4">
+            {query && (
+               <Alert>
+                  <User className="h-4 w-4" />
+                  <AlertTitle>{t.yourQuery}</AlertTitle>
+                  <AlertDescription>
+                    <p className="font-semibold">{query}</p>
+                  </AlertDescription>
+              </Alert>
+            )}
             <Alert>
               <Bot className="h-4 w-4" />
               <AlertTitle>{t.answerIn(language)}</AlertTitle>
@@ -123,7 +212,15 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
               <Bot className="h-4 w-4" />
               <AlertTitle>{t.voiceResponse}</AlertTitle>
               <AlertDescription>
-                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
+                {result.audioOutput && (
+                  <audio
+                    controls
+                    autoPlay
+                    src={result.audioOutput}
+                    className="w-full mt-2"
+                    aria-label="AI voice response"
+                  />
+                )}
               </AlertDescription>
             </Alert>
           </div>
