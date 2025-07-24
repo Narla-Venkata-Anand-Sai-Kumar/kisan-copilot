@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { translations } from '@/lib/i18n';
 
 type Status = 'idle' | 'recording' | 'processing' | 'playing';
 
@@ -27,10 +28,13 @@ export default function VoiceAgent({ language }: VoiceAgentProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
+  const t = translations[language];
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const audio = new Audio();
       audioRef.current = audio;
+      audio.autoplay = true;
       audio.onplay = () => setStatus('playing');
       audio.onpause = () => setStatus('idle');
       audio.onended = () => setStatus('idle');
@@ -58,8 +62,8 @@ export default function VoiceAgent({ language }: VoiceAgentProps) {
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast({
-        title: 'Microphone Error',
-        description: 'Could not access microphone. Please check your browser permissions.',
+        title: t.microphoneError,
+        description: t.microphoneErrorDescription,
         variant: 'destructive',
       });
     }
@@ -85,13 +89,12 @@ export default function VoiceAgent({ language }: VoiceAgentProps) {
         setResult(response);
         if (audioRef.current) {
           audioRef.current.src = response.audioOutput;
-          audioRef.current.play().catch(e => console.error("Audio autoplay failed:", e));
         }
       } catch (error) {
         console.error('Error with voice interaction:', error);
         toast({
-          title: 'AI Error',
-          description: 'Failed to process voice command. Please try again.',
+          title: t.aiError,
+          description: t.failedToProcessVoice,
           variant: 'destructive',
         });
         setStatus('idle');
@@ -104,26 +107,26 @@ export default function VoiceAgent({ language }: VoiceAgentProps) {
       case 'recording':
         return (
           <Button onClick={stopRecording} variant="destructive" size="lg" className="w-48">
-            <Square className="mr-2 h-5 w-5" /> Stop Recording
+            <Square className="mr-2 h-5 w-5" /> {t.stopRecording}
           </Button>
         );
       case 'processing':
         return (
           <Button disabled size="lg" className="w-48">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t.processing}
           </Button>
         );
       case 'playing':
         return (
           <Button disabled size="lg" className="w-48">
-            <Bot className="mr-2 h-5 w-5" /> Playing...
+            <Bot className="mr-2 h-5 w-5" /> {t.playing}
           </Button>
         );
       case 'idle':
       default:
         return (
           <Button onClick={startRecording} size="lg" className="w-48">
-            <Mic className="mr-2 h-5 w-5" /> Start Recording
+            <Mic className="mr-2 h-5 w-5" /> {t.startRecording}
           </Button>
         );
     }
@@ -132,9 +135,9 @@ export default function VoiceAgent({ language }: VoiceAgentProps) {
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Voice Agent ({language})</CardTitle>
+        <CardTitle>{t.voiceAgentIn(language)}</CardTitle>
         <CardDescription>
-          Press the button and speak your query in {language}. The AI will respond in voice.
+          {t.voiceAgentDescription(language)}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center gap-6 p-10">
@@ -155,14 +158,14 @@ export default function VoiceAgent({ language }: VoiceAgentProps) {
           <div className="w-full pt-4 space-y-4">
             <Alert>
               <User className="h-4 w-4" />
-              <AlertTitle>Your Query (Transcribed)</AlertTitle>
+              <AlertTitle>{t.yourQueryTranscribed}</AlertTitle>
               <AlertDescription>
                 <p className="font-semibold">{result.transcribedText}</p>
               </AlertDescription>
             </Alert>
             <Alert>
               <Sparkles className="h-4 w-4" />
-              <AlertTitle>AI Response</AlertTitle>
+              <AlertTitle>{t.aiResponse}</AlertTitle>
               <AlertDescription>
                  <p className="mb-2">{result.responseText}</p>
                  {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}

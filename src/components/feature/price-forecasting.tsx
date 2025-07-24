@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { translations } from '@/lib/i18n';
 
 interface PriceForecastingProps {
   language: string;
@@ -23,10 +24,13 @@ export default function PriceForecasting({ language }: PriceForecastingProps) {
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const t = translations[language];
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const audio = new Audio();
       audioRef.current = audio;
+      audio.autoplay = true;
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
@@ -39,7 +43,6 @@ export default function PriceForecasting({ language }: PriceForecastingProps) {
   useEffect(() => {
     if (result?.audioOutput && audioRef.current) {
       audioRef.current.src = result.audioOutput;
-      audioRef.current.play().catch(e => console.error("Audio autoplay failed:", e));
     }
   }, [result]);
 
@@ -47,8 +50,8 @@ export default function PriceForecasting({ language }: PriceForecastingProps) {
     e.preventDefault();
     if (!crop || !location) {
       toast({
-        title: 'Missing information',
-        description: 'Please enter both crop and location.',
+        title: t.missingInformation,
+        description: t.enterCropAndLocation,
         variant: 'destructive',
       });
       return;
@@ -67,7 +70,7 @@ export default function PriceForecasting({ language }: PriceForecastingProps) {
       console.error('Error fetching price forecast:', error);
       toast({
         title: 'Error',
-        description: 'Failed to get price forecast. Please try again.',
+        description: t.failedToGetForecast,
         variant: 'destructive',
       });
     } finally {
@@ -78,30 +81,30 @@ export default function PriceForecasting({ language }: PriceForecastingProps) {
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Market Price Forecasting</CardTitle>
-        <CardDescription>Get real-time market price forecasts and selling suggestions in your selected language.</CardDescription>
+        <CardTitle>{t.marketPriceForecasting}</CardTitle>
+        <CardDescription>{t.marketPriceDescription}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="crop">Crop Name</Label>
+              <Label htmlFor="crop">{t.cropName}</Label>
               <div className="relative">
                  <Coins className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                 <Input id="crop" placeholder="e.g., Tomato" value={crop} onChange={(e) => setCrop(e.target.value)} required className="pl-10" />
+                 <Input id="crop" placeholder={t.cropPlaceholder} value={crop} onChange={(e) => setCrop(e.target.value)} required className="pl-10" />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">{t.location}</Label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input id="location" placeholder="e.g., Kolar" value={location} onChange={(e) => setLocation(e.target.value)} required className="pl-10" />
+                <Input id="location" placeholder={t.locationPlaceholder} value={location} onChange={(e) => setLocation(e.target.value)} required className="pl-10" />
               </div>
             </div>
           </div>
           <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
             <TrendingUp className="mr-2 h-4 w-4" />
-            {isLoading ? 'Forecasting...' : 'Get Forecast'}
+            {isLoading ? t.forecasting : t.getForecast}
           </Button>
         </form>
 
@@ -121,16 +124,16 @@ export default function PriceForecasting({ language }: PriceForecastingProps) {
         {result && (
           <div className="space-y-4 pt-6">
             <Alert>
-              <AlertTitle>Forecast (in {language})</AlertTitle>
+              <AlertTitle>{t.forecastIn(language)}</AlertTitle>
               <AlertDescription className="text-lg font-semibold">{result.forecast}</AlertDescription>
             </Alert>
             <Alert>
-              <AlertTitle>Suggestion (in {language})</AlertTitle>
+              <AlertTitle>{t.suggestionIn(language)}</AlertTitle>
               <AlertDescription className="text-lg font-semibold">{result.suggestion}</AlertDescription>
             </Alert>
              <Alert>
               <Bot className="h-4 w-4" />
-              <AlertTitle>Voice Response</AlertTitle>
+              <AlertTitle>{t.voiceResponse}</AlertTitle>
               <AlertDescription>
                 {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>

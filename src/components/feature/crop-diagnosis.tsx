@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { translations } from '@/lib/i18n';
 
 interface CropDiagnosisProps {
   language: string;
@@ -23,15 +24,14 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+
+  const t = translations[language];
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const audio = new Audio();
       audioRef.current = audio;
-      audio.onplay = () => setIsPlaying(true);
-      audio.onpause = () => setIsPlaying(false);
-      audio.onended = () => setIsPlaying(false);
+      audio.autoplay = true;
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
@@ -44,7 +44,6 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
   useEffect(() => {
     if (result?.audioOutput && audioRef.current) {
       audioRef.current.src = result.audioOutput;
-      audioRef.current.play().catch(e => console.error("Audio autoplay failed:", e));
     }
   }, [result]);
 
@@ -64,8 +63,8 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
   const handleSubmit = async () => {
     if (!imageFile) {
       toast({
-        title: 'No image selected',
-        description: 'Please upload an image of the plant.',
+        title: t.noImageSelected,
+        description: t.pleaseUploadImage,
         variant: 'destructive',
       });
       return;
@@ -88,7 +87,7 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
         console.error('Error diagnosing crop disease:', error);
         toast({
           title: 'Error',
-          description: 'Failed to diagnose crop disease. Please try again.',
+          description: t.failedToDiagnose,
           variant: 'destructive',
         });
       } finally {
@@ -98,8 +97,8 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
     reader.onerror = (error) => {
         console.error('Error reading file:', error);
         toast({
-          title: 'File Read Error',
-          description: 'Could not read the selected image file.',
+          title: t.fileReadError,
+          description: t.couldNotReadFile,
           variant: 'destructive',
         });
         setIsLoading(false);
@@ -109,17 +108,17 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Crop Disease Detection</CardTitle>
-        <CardDescription>Upload an image of a plant to diagnose diseases and get remedies.</CardDescription>
+        <CardTitle>{t.cropDiseaseDetection}</CardTitle>
+        <CardDescription>{t.uploadImageDescription}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="picture">Plant Image</Label>
+          <Label htmlFor="picture">{t.plantImage}</Label>
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} className="flex-1" />
             <Button onClick={handleSubmit} disabled={isLoading || !imageFile} className="w-full sm:w-auto">
               <Upload className="mr-2 h-4 w-4" />
-              {isLoading ? 'Diagnosing...' : 'Diagnose'}
+              {isLoading ? t.diagnosing : t.diagnose}
             </Button>
           </div>
         </div>
@@ -156,17 +155,17 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
           <div className="space-y-4 pt-4">
             <Alert>
               <Microscope className="h-4 w-4" />
-              <AlertTitle>Diagnosis</AlertTitle>
+              <AlertTitle>{t.diagnosis}</AlertTitle>
               <AlertDescription className="font-semibold">{result.diagnosis}</AlertDescription>
             </Alert>
             <Alert>
               <Stethoscope className="h-4 w-4" />
-              <AlertTitle>Remedies (in {language})</AlertTitle>
+              <AlertTitle>{t.remediesIn(language)}</AlertTitle>
               <AlertDescription className="font-semibold">{result.remedies}</AlertDescription>
             </Alert>
             <Alert>
               <Bot className="h-4 w-4" />
-              <AlertTitle>Voice Response</AlertTitle>
+              <AlertTitle>{t.voiceResponse}</AlertTitle>
               <AlertDescription>
                 {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
