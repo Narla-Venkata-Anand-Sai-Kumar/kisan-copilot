@@ -1,4 +1,3 @@
-// src/ai/flows/market-price-forecasting.ts
 'use server';
 
 /**
@@ -11,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import wav from 'wav';
 
 const MarketPriceForecastingInputSchema = z.object({
   crop: z.string().describe('The crop for which to forecast the market price.'),
@@ -22,6 +22,7 @@ export type MarketPriceForecastingInput = z.infer<typeof MarketPriceForecastingI
 const MarketPriceForecastingOutputSchema = z.object({
   forecast: z.string().describe('The market price forecast for the specified crop and location in Kannada.'),
   suggestion: z.string().describe('A selling suggestion based on the market price forecast in Kannada.'),
+  audioOutput: z.string().describe('Audio output in WAV format as a data URI.'),
 });
 
 export type MarketPriceForecastingOutput = z.infer<typeof MarketPriceForecastingOutputSchema>;
@@ -30,10 +31,40 @@ export async function marketPriceForecasting(input: MarketPriceForecastingInput)
   return marketPriceForecastingFlow(input);
 }
 
+async function toWav(
+  pcmData: Buffer,
+  channels = 1,
+  rate = 24000,
+  sampleWidth = 2
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const writer = new wav.Writer({
+      channels,
+      sampleRate: rate,
+      bitDepth: sampleWidth * 8,
+    });
+
+    let bufs = [] as any[];
+    writer.on('error', reject);
+    writer.on('data', function (d) {
+      bufs.push(d);
+    });
+    writer.on('end', function () {
+      resolve(Buffer.concat(bufs).toString('base64'));
+    });
+
+    writer.write(pcmData);
+    writer.end();
+  });
+}
+
 const marketPriceForecastingPrompt = ai.definePrompt({
   name: 'marketPriceForecastingPrompt',
   input: {schema: MarketPriceForecastingInputSchema},
-  output: {schema: MarketPriceForecastingOutputSchema},
+  output: {schema: z.object({
+    forecast: z.string().describe('The market price forecast for the specified crop and location in Kannada.'),
+    suggestion: z.string().describe('A selling suggestion based on the market price forecast in Kannada.'),
+  })},
   prompt: `You are an AI assistant providing market price forecasts and selling suggestions to farmers.
 
   Provide the forecast and suggestion in Kannada.
@@ -53,6 +84,38 @@ const marketPriceForecastingFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await marketPriceForecastingPrompt(input);
-    return output!;
+    
+    if (!output) {
+      throw new Error('Could not get price forecast.');
+    }
+
+    const responseText = `Forecast: ${output.forecast}. Suggestion: ${output.suggestion}`;
+
+    const { media } = await ai.generate({
+      model: 'googleai/gemini-2.5-flash-preview-tts',
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+          },
+        },
+      },
+      prompt: responseText,
+    });
+
+    if (!media) {
+      throw new Error('no media returned');
+    }
+
+    const audioBuffer = Buffer.from(
+      media.url.substring(media.url.indexOf(',') + 1),
+      'base64'
+    );
+    
+    return {
+      ...output,
+      audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+    };
   }
 );

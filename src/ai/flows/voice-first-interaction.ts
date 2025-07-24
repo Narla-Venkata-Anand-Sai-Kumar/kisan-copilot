@@ -11,7 +11,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
-import { navigateGovernmentSchemes } from './government-scheme-navigation';
 
 const VoiceFirstInteractionInputSchema = z.object({
   audioDataUri: z
@@ -71,22 +70,49 @@ const voiceFirstInteractionFlow = ai.defineFlow(
     const sttResult = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: [
-        { text: "Transcribe the following audio in Kannada. If it's another language, transcribe it in that language." },
+        { text: "Transcribe the following audio. The primary language is Kannada, but transcribe other languages if spoken." },
         { media: { url: input.audioDataUri } },
       ],
     });
     const transcribedText = sttResult.text;
 
     if (!transcribedText) {
-      throw new Error('Could not transcribe audio.');
-    }
+      // Return a user-friendly message if transcription fails
+      const responseText = "Sorry, I couldn't understand the audio. Please try again.";
+      const { media } = await ai.generate({
+        model: 'googleai/gemini-2.5-flash-preview-tts',
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Algenib' },
+            },
+          },
+        },
+        prompt: responseText,
+      });
 
-    // Get response from scheme navigator
-    const response = await navigateGovernmentSchemes({
-      query: transcribedText,
-      language: 'Kannada',
+      if (!media) {
+        throw new Error('no media returned for error message');
+      }
+
+      const audioBuffer = Buffer.from(
+        media.url.substring(media.url.indexOf(',') + 1),
+        'base64'
+      );
+
+      return {
+        audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+        transcribedText: '',
+        responseText,
+      };
+    }
+    
+    const llmResult = await ai.generate({
+      prompt: `You are a helpful assistant for farmers. The user said: "${transcribedText}". Provide a helpful response in Kannada.`
     });
-    const responseText = response.answer;
+
+    const responseText = llmResult.text
 
     // Text-to-Speech
     const { media } = await ai.generate({

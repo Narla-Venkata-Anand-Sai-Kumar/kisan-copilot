@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { TrendingUp, Coins, Building2 } from 'lucide-react';
+import { TrendingUp, Coins, Building2, Bot } from 'lucide-react';
 import { marketPriceForecasting } from '@/ai/flows/market-price-forecasting';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function PriceForecasting() {
   const [crop, setCrop] = useState('');
   const [location, setLocation] = useState('');
-  const [result, setResult] = useState<{ forecast: string; suggestion: string } | null>(null);
+  const [result, setResult] = useState<{ forecast: string; suggestion: string; audioOutput: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -99,6 +99,13 @@ export default function PriceForecasting() {
             <Alert>
               <AlertTitle>Suggestion (in Kannada)</AlertTitle>
               <AlertDescription className="text-lg font-semibold">{result.suggestion}</AlertDescription>
+            </Alert>
+             <Alert>
+              <Bot className="h-4 w-4" />
+              <AlertTitle>Voice Response</AlertTitle>
+              <AlertDescription>
+                {result.audioOutput && <audio controls src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
+              </AlertDescription>
             </Alert>
           </div>
         )}

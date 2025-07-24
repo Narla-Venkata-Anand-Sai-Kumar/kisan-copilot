@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Upload, Microscope, Stethoscope } from 'lucide-react';
+import { Upload, Microscope, Stethoscope, Bot } from 'lucide-react';
 import { diagnoseCropDisease } from '@/ai/flows/crop-disease-diagnosis';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function CropDiagnosis() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [result, setResult] = useState<{ diagnosis: string; remedies: string } | null>(null);
+  const [result, setResult] = useState<{ diagnosis: string; remedies: string; audioOutput: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -131,6 +131,13 @@ export default function CropDiagnosis() {
               <Stethoscope className="h-4 w-4" />
               <AlertTitle>Remedies (in Kannada)</AlertTitle>
               <AlertDescription className="font-semibold">{result.remedies}</AlertDescription>
+            </Alert>
+            <Alert>
+              <Bot className="h-4 w-4" />
+              <AlertTitle>Voice Response</AlertTitle>
+              <AlertDescription>
+                {result.audioOutput && <audio controls src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
+              </AlertDescription>
             </Alert>
           </div>
         )}

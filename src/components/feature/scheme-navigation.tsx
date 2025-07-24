@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function SchemeNavigation() {
   const [query, setQuery] = useState('');
   const [language, setLanguage] = useState('Kannada');
-  const [result, setResult] = useState<{ answer: string } | null>(null);
+  const [result, setResult] = useState<{ answer: string, audioOutput: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -100,12 +100,19 @@ export default function SchemeNavigation() {
         )}
 
         {result && (
-          <div className="pt-6">
+          <div className="pt-6 space-y-4">
             <Alert>
               <Bot className="h-4 w-4" />
               <AlertTitle>Answer</AlertTitle>
               <AlertDescription>
                 <p className="whitespace-pre-wrap">{result.answer}</p>
+              </AlertDescription>
+            </Alert>
+            <Alert>
+              <Bot className="h-4 w-4" />
+              <AlertTitle>Voice Response</AlertTitle>
+              <AlertDescription>
+                {result.audioOutput && <audio controls src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
             </Alert>
           </div>
