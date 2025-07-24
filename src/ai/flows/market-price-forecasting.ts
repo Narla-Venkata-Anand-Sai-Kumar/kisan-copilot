@@ -93,7 +93,7 @@ const marketPriceForecastingFlow = ai.defineFlow(
             suggestion: z.string().describe('A clear, actionable selling suggestion for the farmer based on the forecast and current price.'),
         })},
         tools: [getMarketPriceTool],
-        prompt: `You are an expert agricultural market analyst agent. Your task is to provide a detailed market price forecast and an actionable selling suggestion to farmers.
+        prompt: `You are an expert agricultural market analyst agent. Your task is to provide a detailed market price forecast and an actionable selling suggestion to farmers in valid JSON format.
 
         Follow these steps:
         1. Use the 'getMarketPrice' tool to scrape official government sources and get the most accurate, real-time price per quintal for the given crop and location.
@@ -114,34 +114,38 @@ const marketPriceForecastingFlow = ai.defineFlow(
     if (!forecastOutput) {
       throw new Error('Could not get price forecast.');
     }
+    
+    let audioOutput = '';
+    try {
+      const responseText = `Forecast: ${forecastOutput.forecast}. Suggestion: ${forecastOutput.suggestion}`;
 
-    const responseText = `Forecast: ${forecastOutput.forecast}. Suggestion: ${forecastOutput.suggestion}`;
-
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-preview-tts',
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+      const { media } = await ai.generate({
+        model: 'googleai/gemini-2.5-flash-preview-tts',
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Algenib' },
+            },
           },
         },
-      },
-      prompt: responseText,
-    });
+        prompt: responseText,
+      });
 
-    if (!media?.url) {
-      throw new Error('no media returned');
+      if (media?.url) {
+        const audioBuffer = Buffer.from(
+          media.url.substring(media.url.indexOf(',') + 1),
+          'base64'
+        );
+        audioOutput = 'data:audio/wav;base64,' + (await toWav(audioBuffer));
+      }
+    } catch (e) {
+      console.error('TTS generation failed, likely due to quota. Returning text only.', e);
     }
-
-    const audioBuffer = Buffer.from(
-      media.url.substring(media.url.indexOf(',') + 1),
-      'base64'
-    );
     
     return {
       ...forecastOutput,
-      audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+      audioOutput,
     };
   }
 );

@@ -108,31 +108,35 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
       throw new Error('Could not get scheme information.');
     }
 
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-preview-tts',
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+    let audioOutput = '';
+    try {
+      const { media } = await ai.generate({
+        model: 'googleai/gemini-2.5-flash-preview-tts',
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Algenib' },
+            },
           },
         },
-      },
-      prompt: schemesOutput.answer,
-    });
+        prompt: schemesOutput.answer,
+      });
 
-    if (!media?.url) {
-      throw new Error('no media returned');
+      if (media?.url) {
+        const audioBuffer = Buffer.from(
+          media.url.substring(media.url.indexOf(',') + 1),
+          'base64'
+        );
+        audioOutput = 'data:audio/wav;base64,' + (await toWav(audioBuffer));
+      }
+    } catch (e) {
+      console.error('TTS generation failed, likely due to quota. Returning text only.', e);
     }
-
-    const audioBuffer = Buffer.from(
-      media.url.substring(media.url.indexOf(',') + 1),
-      'base64'
-    );
-
+    
     return {
       ...schemesOutput,
-      audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+      audioOutput,
     };
   }
 );

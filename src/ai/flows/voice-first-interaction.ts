@@ -80,6 +80,48 @@ const voiceFirstInteractionFlow = ai.defineFlow(
     if (!transcribedText) {
       // Return a user-friendly message if transcription fails
       const responseText = "Sorry, I couldn't understand the audio. Please try again.";
+      let audioOutput = '';
+      try {
+        const { media } = await ai.generate({
+          model: 'googleai/gemini-2.5-flash-preview-tts',
+          config: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: 'Algenib' },
+              },
+            },
+          },
+          prompt: responseText,
+        });
+
+        if (media?.url) {
+          const audioBuffer = Buffer.from(
+            media.url.substring(media.url.indexOf(',') + 1),
+            'base64'
+          );
+          audioOutput = 'data:audio/wav;base64,' + (await toWav(audioBuffer));
+        }
+      } catch(e) {
+        console.error('TTS generation failed, likely due to quota. Returning text only.', e);
+      }
+
+      return {
+        audioOutput,
+        transcribedText: '',
+        responseText,
+      };
+    }
+    
+    const llmResult = await ai.generate({
+      prompt: `You are a helpful assistant for farmers. The user said: "${transcribedText}". Provide a helpful response in ${input.language}.`
+    });
+
+    const responseText = llmResult.text
+
+    let audioOutput = '';
+    try {
+      // Text-to-Speech
       const { media } = await ai.generate({
         model: 'googleai/gemini-2.5-flash-preview-tts',
         config: {
@@ -93,53 +135,19 @@ const voiceFirstInteractionFlow = ai.defineFlow(
         prompt: responseText,
       });
 
-      if (!media) {
-        throw new Error('no media returned for error message');
+      if (media?.url) {
+        const audioBuffer = Buffer.from(
+          media.url.substring(media.url.indexOf(',') + 1),
+          'base64'
+        );
+        audioOutput = 'data:audio/wav;base64,' + (await toWav(audioBuffer));
       }
-
-      const audioBuffer = Buffer.from(
-        media.url.substring(media.url.indexOf(',') + 1),
-        'base64'
-      );
-
-      return {
-        audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
-        transcribedText: '',
-        responseText,
-      };
+    } catch(e) {
+      console.error('TTS generation failed, likely due to quota. Returning text only.', e);
     }
     
-    const llmResult = await ai.generate({
-      prompt: `You are a helpful assistant for farmers. The user said: "${transcribedText}". Provide a helpful response in ${input.language}.`
-    });
-
-    const responseText = llmResult.text
-
-    // Text-to-Speech
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-preview-tts',
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
-          },
-        },
-      },
-      prompt: responseText,
-    });
-
-    if (!media?.url) {
-      throw new Error('no media returned');
-    }
-
-    const audioBuffer = Buffer.from(
-      media.url.substring(media.url.indexOf(',') + 1),
-      'base64'
-    );
-
     return {
-      audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+      audioOutput,
       transcribedText,
       responseText,
     };

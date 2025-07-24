@@ -96,33 +96,37 @@ const diagnoseCropDiseaseFlow = ai.defineFlow(
       throw new Error('Could not diagnose crop disease.');
     }
 
-    const responseText = `Plant: ${diagnosisOutput.plantName}. Diagnosis: ${diagnosisOutput.diagnosis}. Remedies: ${diagnosisOutput.remedies}`;
+    let audioOutput = '';
+    try {
+      const responseText = `Plant: ${diagnosisOutput.plantName}. Diagnosis: ${diagnosisOutput.diagnosis}. Remedies: ${diagnosisOutput.remedies}`;
 
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-preview-tts',
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+      const { media } = await ai.generate({
+        model: 'googleai/gemini-2.5-flash-preview-tts',
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Algenib' },
+            },
           },
         },
-      },
-      prompt: responseText,
-    });
+        prompt: responseText,
+      });
 
-    if (!media?.url) {
-      throw new Error('no media returned');
+      if (media?.url) {
+        const audioBuffer = Buffer.from(
+          media.url.substring(media.url.indexOf(',') + 1),
+          'base64'
+        );
+        audioOutput = 'data:audio/wav;base64,' + (await toWav(audioBuffer));
+      }
+    } catch (e) {
+      console.error('TTS generation failed, likely due to quota. Returning text only.', e);
     }
-
-    const audioBuffer = Buffer.from(
-      media.url.substring(media.url.indexOf(',') + 1),
-      'base64'
-    );
-
+    
     return {
       ...diagnosisOutput,
-      audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+      audioOutput,
     };
   }
 );
