@@ -71,7 +71,7 @@ const diagnosisPrompt = ai.definePrompt({
     diagnosis: z.string().describe('The diagnosis of the plant disease.'),
     remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
   })},
-  prompt: `You are an expert in plant diseases.
+  prompt: `You are an expert in plant diseases. Your task is to provide a detailed and helpful response to users in valid JSON format.
 1. First, identify the plant from the image.
 2. Then, diagnose the disease in the plant shown in the image.
 3. Finally, suggest remedies for the diagnosed disease.
