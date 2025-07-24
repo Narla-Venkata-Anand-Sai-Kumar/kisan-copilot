@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
+import { navigateGovernmentSchemes } from './government-scheme-navigation';
 
 const VoiceFirstInteractionInputSchema = z.object({
   audioDataUri: z
@@ -23,6 +24,8 @@ export type VoiceFirstInteractionInput = z.infer<typeof VoiceFirstInteractionInp
 
 const VoiceFirstInteractionOutputSchema = z.object({
   audioOutput: z.string().describe('Audio output in WAV format as a data URI.'),
+  transcribedText: z.string().describe('The transcribed text from the user\'s audio input.'),
+  responseText: z.string().describe('The text response from the AI assistant.'),
 });
 export type VoiceFirstInteractionOutput = z.infer<typeof VoiceFirstInteractionOutputSchema>;
 
@@ -63,25 +66,40 @@ const voiceFirstInteractionFlow = ai.defineFlow(
     inputSchema: VoiceFirstInteractionInputSchema,
     outputSchema: VoiceFirstInteractionOutputSchema,
   },
-  async input => {
-    // STT using Vertex AI (assuming direct audio processing not possible in Genkit, so passing text)
-    // In real implementation, the audio from audioDataUri needs to be sent to Vertex AI STT to get the transcribedText.
-    // const transcribedText = await stt(input.audioDataUri); // Example of STT call (not implemented here)
+  async (input) => {
+    // Speech-to-Text
+    const sttResult = await ai.generate({
+      model: 'googleai/gemini-2.0-flash',
+      prompt: [
+        { text: "Transcribe the following audio in Kannada. If it's another language, transcribe it in that language." },
+        { media: { url: input.audioDataUri } },
+      ],
+    });
+    const transcribedText = sttResult.text;
 
-    // Placeholder for transcribed text.  In a real implementation, this would come from STT.
-    const transcribedText =  "tomato price today in Kannada";
+    if (!transcribedText) {
+      throw new Error('Could not transcribe audio.');
+    }
 
-    const {media} = await ai.generate({
+    // Get response from scheme navigator
+    const response = await navigateGovernmentSchemes({
+      query: transcribedText,
+      language: 'Kannada',
+    });
+    const responseText = response.answer;
+
+    // Text-to-Speech
+    const { media } = await ai.generate({
       model: 'googleai/gemini-2.5-flash-preview-tts',
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: {voiceName: 'Algenib'},
+            prebuiltVoiceConfig: { voiceName: 'Algenib' },
           },
         },
       },
-      prompt: transcribedText,
+      prompt: responseText,
     });
 
     if (!media) {
@@ -95,6 +113,8 @@ const voiceFirstInteractionFlow = ai.defineFlow(
 
     return {
       audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+      transcribedText,
+      responseText,
     };
   }
 );

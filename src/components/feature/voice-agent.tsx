@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Bot, Loader2 } from 'lucide-react';
+import { Mic, Square, Bot, Loader2, User, Sparkles } from 'lucide-react';
 import { voiceFirstInteraction } from '@/ai/flows/voice-first-interaction';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +10,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type Status = 'idle' | 'recording' | 'processing' | 'playing';
 
+interface InteractionResult {
+  transcribedText: string;
+  responseText: string;
+  audioOutput: string;
+}
+
 export default function VoiceAgent() {
   const [status, setStatus] = useState<Status>('idle');
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [result, setResult] = useState<InteractionResult | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -23,14 +29,17 @@ export default function VoiceAgent() {
       audioRef.current = new Audio();
       audioRef.current.onended = () => setStatus('idle');
       return () => {
-        if(audioRef.current) {
+        if (audioRef.current) {
           audioRef.current.onended = null;
+          audioRef.current.pause();
+          audioRef.current.src = '';
         }
-      }
+      };
     }
   }, []);
 
   const startRecording = async () => {
+    setResult(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
@@ -54,6 +63,8 @@ export default function VoiceAgent() {
   const stopRecording = () => {
     if (mediaRecorderRef.current && status === 'recording') {
       mediaRecorderRef.current.stop();
+       // Stop all media tracks to turn off the microphone indicator
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
   };
 
@@ -66,7 +77,7 @@ export default function VoiceAgent() {
       const audioDataUri = reader.result as string;
       try {
         const response = await voiceFirstInteraction({ audioDataUri });
-        setAudioUrl(response.audioOutput);
+        setResult(response);
         if (audioRef.current) {
           audioRef.current.src = response.audioOutput;
           audioRef.current.play();
@@ -99,7 +110,7 @@ export default function VoiceAgent() {
           </Button>
         );
       case 'playing':
-         return (
+        return (
           <Button disabled size="lg" className="w-48">
             <Bot className="mr-2 h-5 w-5" /> Playing...
           </Button>
@@ -123,23 +134,34 @@ export default function VoiceAgent() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center gap-6 p-10">
-        <div className={`h-24 w-24 rounded-full flex items-center justify-center transition-all duration-300
+        <div
+          className={`h-24 w-24 rounded-full flex items-center justify-center transition-all duration-300
           ${status === 'recording' ? 'bg-destructive/20 scale-110 animate-pulse' : 'bg-muted'}
           ${status === 'processing' ? 'bg-primary/20' : ''}
-          ${status === 'playing' ? 'bg-accent/20' : ''}`}>
+          ${status === 'playing' ? 'bg-accent/20' : ''}`}
+        >
           {status === 'recording' && <Mic className="h-10 w-10 text-destructive" />}
           {status === 'processing' && <Loader2 className="h-10 w-10 text-primary animate-spin" />}
           {status === 'playing' && <Bot className="h-10 w-10 text-accent" />}
           {status === 'idle' && <Mic className="h-10 w-10 text-muted-foreground" />}
         </div>
         {renderButton()}
-        
-        {audioUrl && (
-          <div className="w-full pt-4">
-             <Alert>
-              <AlertTitle>Audio Response</AlertTitle>
+
+        {result && (
+          <div className="w-full pt-4 space-y-4">
+            <Alert>
+              <User className="h-4 w-4" />
+              <AlertTitle>Your Query (Transcribed)</AlertTitle>
               <AlertDescription>
-                <audio controls src={audioUrl} className="w-full mt-2" aria-label="AI voice response" />
+                <p className="font-semibold">{result.transcribedText}</p>
+              </AlertDescription>
+            </Alert>
+            <Alert>
+              <Sparkles className="h-4 w-4" />
+              <AlertTitle>AI Response</AlertTitle>
+              <AlertDescription>
+                 <p className="mb-2">{result.responseText}</p>
+                 {result.audioOutput && <audio controls src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
             </Alert>
           </div>
