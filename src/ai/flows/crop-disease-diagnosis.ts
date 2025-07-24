@@ -23,6 +23,7 @@ const DiagnoseCropDiseaseInputSchema = z.object({
 export type DiagnoseCropDiseaseInput = z.infer<typeof DiagnoseCropDiseaseInputSchema>;
 
 const DiagnoseCropDiseaseOutputSchema = z.object({
+  plantName: z.string().describe('The common name of the identified plant.'),
   diagnosis: z.string().describe('The diagnosis of the plant disease.'),
   remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
   audioOutput: z.string().describe('Audio output in WAV format as a data URI.'),
@@ -66,13 +67,19 @@ const diagnosisPrompt = ai.definePrompt({
   name: 'diagnoseCropDiseasePrompt',
   input: {schema: DiagnoseCropDiseaseInputSchema},
   output: {schema: z.object({
+    plantName: z.string().describe('The common name of the identified plant.'),
     diagnosis: z.string().describe('The diagnosis of the plant disease.'),
     remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
   })},
-  prompt: `You are an expert in plant diseases. Diagnose the disease in the plant shown in the image and suggest remedies in the specified language.
+  prompt: `You are an expert in plant diseases.
+1. First, identify the plant from the image.
+2. Then, diagnose the disease in the plant shown in the image.
+3. Finally, suggest remedies for the diagnosed disease.
 
-  Language: {{{language}}}
-  Image: {{media url=photoDataUri}}
+Provide the entire response in the specified language.
+
+Language: {{{language}}}
+Image: {{media url=photoDataUri}}
 `,
 });
 
@@ -89,7 +96,7 @@ const diagnoseCropDiseaseFlow = ai.defineFlow(
       throw new Error('Could not diagnose crop disease.');
     }
 
-    const responseText = `Diagnosis: ${diagnosisOutput.diagnosis}. Remedies: ${diagnosisOutput.remedies}`;
+    const responseText = `Plant: ${diagnosisOutput.plantName}. Diagnosis: ${diagnosisOutput.diagnosis}. Remedies: ${diagnosisOutput.remedies}`;
 
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.5-flash-preview-tts',

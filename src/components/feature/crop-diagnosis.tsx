@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Upload, Microscope, Stethoscope, Bot } from 'lucide-react';
+import { Upload, Microscope, Stethoscope, Bot, Sparkles } from 'lucide-react';
 import { diagnoseCropDisease } from '@/ai/flows/crop-disease-diagnosis';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ interface CropDiagnosisProps {
 export default function CropDiagnosis({ language }: CropDiagnosisProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [result, setResult] = useState<{ diagnosis: string; remedies: string; audioOutput: string; } | null>(null);
+  const [result, setResult] = useState<{ plantName: string; diagnosis: string; remedies: string; audioOutput: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -153,6 +153,11 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
 
         {result && (
           <div className="space-y-4 pt-4">
+            <Alert>
+              <Sparkles className="h-4 w-4" />
+              <AlertTitle>{t.plantName}</AlertTitle>
+              <AlertDescription className="font-semibold">{result.plantName}</AlertDescription>
+            </Alert>
             <Alert>
               <Microscope className="h-4 w-4" />
               <AlertTitle>{t.diagnosis}</AlertTitle>
