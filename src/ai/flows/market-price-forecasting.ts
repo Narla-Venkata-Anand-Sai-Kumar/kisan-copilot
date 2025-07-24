@@ -89,6 +89,8 @@ const marketPriceForecastingPrompt = ai.definePrompt({
   prompt: `You are an AI assistant providing market price forecasts and selling suggestions to farmers. 
   Use the getMarketPrice tool to fetch the current price per quintal for the given crop and location.
   
+  Your forecast should start by stating the current price you found. For example: "The current price for [crop] in [location] is [price] per quintal."
+
   Provide the forecast and suggestion in the specified language.
   
   Language: {{{language}}}
