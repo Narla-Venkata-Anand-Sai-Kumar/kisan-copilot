@@ -83,13 +83,13 @@ const marketPriceForecastingFlow = ai.defineFlow(
     outputSchema: MarketPriceForecastingOutputSchema,
   },
   async input => {
-    const {output} = await marketPriceForecastingPrompt(input);
+    const {output: forecastOutput} = await marketPriceForecastingPrompt(input);
     
-    if (!output) {
+    if (!forecastOutput) {
       throw new Error('Could not get price forecast.');
     }
 
-    const responseText = `Forecast: ${output.forecast}. Suggestion: ${output.suggestion}`;
+    const responseText = `Forecast: ${forecastOutput.forecast}. Suggestion: ${forecastOutput.suggestion}`;
 
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.5-flash-preview-tts',
@@ -104,7 +104,7 @@ const marketPriceForecastingFlow = ai.defineFlow(
       prompt: responseText,
     });
 
-    if (!media) {
+    if (!media?.url) {
       throw new Error('no media returned');
     }
 
@@ -114,7 +114,7 @@ const marketPriceForecastingFlow = ai.defineFlow(
     );
     
     return {
-      ...output,
+      ...forecastOutput,
       audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
     };
   }

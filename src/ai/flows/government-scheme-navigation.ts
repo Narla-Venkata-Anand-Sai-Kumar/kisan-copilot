@@ -61,7 +61,7 @@ async function toWav(
   });
 }
 
-const prompt = ai.definePrompt({
+const schemesPrompt = ai.definePrompt({
   name: 'navigateGovernmentSchemesPrompt',
   input: {schema: NavigateGovernmentSchemesInputSchema},
   output: {schema: z.object({
@@ -80,8 +80,8 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
     outputSchema: NavigateGovernmentSchemesOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    if(!output) {
+    const {output: schemesOutput} = await schemesPrompt(input);
+    if(!schemesOutput) {
       throw new Error('Could not get scheme information.');
     }
 
@@ -95,10 +95,10 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
           },
         },
       },
-      prompt: output.answer,
+      prompt: schemesOutput.answer,
     });
 
-    if (!media) {
+    if (!media?.url) {
       throw new Error('no media returned');
     }
 
@@ -108,7 +108,7 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
     );
 
     return {
-      ...output,
+      ...schemesOutput,
       audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
     };
   }

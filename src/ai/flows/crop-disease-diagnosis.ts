@@ -61,7 +61,7 @@ async function toWav(
   });
 }
 
-const prompt = ai.definePrompt({
+const diagnosisPrompt = ai.definePrompt({
   name: 'diagnoseCropDiseasePrompt',
   input: {schema: DiagnoseCropDiseaseInputSchema},
   output: {schema: z.object({
@@ -81,13 +81,13 @@ const diagnoseCropDiseaseFlow = ai.defineFlow(
     outputSchema: DiagnoseCropDiseaseOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output: diagnosisOutput} = await diagnosisPrompt(input);
 
-    if (!output) {
+    if (!diagnosisOutput) {
       throw new Error('Could not diagnose crop disease.');
     }
 
-    const responseText = `Diagnosis: ${output.diagnosis}. Remedies: ${output.remedies}`;
+    const responseText = `Diagnosis: ${diagnosisOutput.diagnosis}. Remedies: ${diagnosisOutput.remedies}`;
 
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.5-flash-preview-tts',
@@ -102,7 +102,7 @@ const diagnoseCropDiseaseFlow = ai.defineFlow(
       prompt: responseText,
     });
 
-    if (!media) {
+    if (!media?.url) {
       throw new Error('no media returned');
     }
 
@@ -112,7 +112,7 @@ const diagnoseCropDiseaseFlow = ai.defineFlow(
     );
 
     return {
-      ...output,
+      ...diagnosisOutput,
       audioOutput: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
     };
   }
