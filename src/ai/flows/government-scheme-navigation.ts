@@ -38,11 +38,11 @@ export async function navigateGovernmentSchemes(
 const getSchemeInfoTool = ai.defineTool(
     {
       name: 'getSchemeInfo',
-      description: 'Searches official government websites and agricultural portals to get information about a specific scheme. This should be used to answer any user query about government schemes.',
+      description: 'Searches official government websites and agricultural portals to get information about a specific scheme. This tool provides details on eligibility, benefits, and how to apply.',
       inputSchema: z.object({
         query: z.string().describe('The user\'s question about a government scheme.'),
       }),
-      outputSchema: z.string().describe('A summary of the information found about the scheme.'),
+      outputSchema: z.string().describe('A summary of the information found about the scheme, including application steps.'),
     },
     async (input) => {
         return searchGovernmentSchemes(input.query);
@@ -83,12 +83,14 @@ const schemesPrompt = ai.definePrompt({
     answer: z.string().describe('The answer to the query about government schemes.'),
   })},
   tools: [getSchemeInfoTool],
-  prompt: `You are an expert agent specializing in Indian government schemes for farmers.
-Your task is to answer user questions accurately by using the provided tool.
+  prompt: `You are an expert agent specializing in Indian government schemes for farmers. Your task is to provide a detailed and helpful response to user questions.
 
-1. Use the 'getSchemeInfo' tool to search the web and find information related to the user's query.
-2. Synthesize the information returned by the tool into a clear and concise answer.
-3. Provide the entire response in the user-specified language.
+Follow these steps:
+1.  Use the 'getSchemeInfo' tool to search for the most relevant information regarding the user's query.
+2.  Synthesize the information returned by the tool into a clear and comprehensive answer.
+3.  Your answer MUST include details about the scheme's benefits, eligibility criteria, and a step-by-step guide on how to apply.
+4.  If the user asks a general question, provide a general answer, but if they ask how to apply, focus on the application steps.
+5.  Provide the entire response in the user-specified language.
 
 Question: {{{query}}}
 Language: {{{language}}}`,
