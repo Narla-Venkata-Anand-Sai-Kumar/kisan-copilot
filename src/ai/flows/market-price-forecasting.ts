@@ -36,7 +36,7 @@ export async function marketPriceForecasting(input: MarketPriceForecastingInput)
 const getMarketPriceTool = ai.defineTool(
     {
       name: 'getMarketPrice',
-      description: 'Gets the current market price for a given crop and location.',
+      description: 'This tool performs detailed research and web scraping of official government and agricultural market websites to get the current market price for a given crop and location. It should be the first step in any market analysis.',
       inputSchema: z.object({
         crop: z.string(),
         location: z.string(),
@@ -82,23 +82,24 @@ const marketPriceForecastingPrompt = ai.definePrompt({
   name: 'marketPriceForecastingPrompt',
   input: {schema: MarketPriceForecastingInputSchema},
   output: {schema: z.object({
-    forecast: z.string().describe('The market price forecast for the specified crop and location in the specified language.'),
-    suggestion: z.string().describe('A selling suggestion based on the market price forecast in the specified language.'),
+    forecast: z.string().describe('A detailed market price forecast based on the provided data. It should analyze trends and provide a forward-looking statement.'),
+    suggestion: z.string().describe('A clear, actionable selling suggestion for the farmer based on the forecast and current price.'),
   })},
   tools: [getMarketPriceTool],
-  prompt: `You are an AI assistant providing market price forecasts and selling suggestions to farmers. 
-  Use the getMarketPrice tool to fetch the current price per quintal for the given crop and location.
-  
-  Your forecast should start by stating the current price you found. For example: "The current price for [crop] in [location] is [price] per quintal."
+  prompt: `You are an expert agricultural market analyst agent. Your task is to provide a detailed market price forecast and an actionable selling suggestion to farmers.
 
-  Provide the forecast and suggestion in the specified language.
-  
-  Language: {{{language}}}
-  Crop: {{{crop}}}
-  Location: {{{location}}}
+Follow these steps:
+1. Use the 'getMarketPrice' tool to scrape official government sources and get the most accurate, real-time price per quintal for the given crop and location.
+2. State the retrieved price clearly in your forecast. For example: "Based on data from official sources, the current price for [crop] in [location] is [price] per quintal."
+3. Analyze this price. Based on simulated historical data and market trends, generate a forward-looking forecast.
+4. Provide a concrete selling suggestion. Should the farmer sell now, hold, or sell in portions? Justify your suggestion.
+5. Provide the entire response in the user-specified language.
 
-  Forecast:
-  Suggestion: `,
+Language: {{{language}}}
+Crop: {{{crop}}}
+Location: {{{location}}}
+
+Begin your analysis now.`,
 });
 
 const marketPriceForecastingFlow = ai.defineFlow(
