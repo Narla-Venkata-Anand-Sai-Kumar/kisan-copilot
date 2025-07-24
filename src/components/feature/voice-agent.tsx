@@ -26,11 +26,13 @@ export default function VoiceAgent() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio();
-      audioRef.current.onended = () => setStatus('idle');
+      const audio = new Audio();
+      audioRef.current = audio;
+      audio.onplay = () => setStatus('playing');
+      audio.onpause = () => setStatus('idle');
+      audio.onended = () => setStatus('idle');
       return () => {
         if (audioRef.current) {
-          audioRef.current.onended = null;
           audioRef.current.pause();
           audioRef.current.src = '';
         }
@@ -80,8 +82,7 @@ export default function VoiceAgent() {
         setResult(response);
         if (audioRef.current) {
           audioRef.current.src = response.audioOutput;
-          audioRef.current.play();
-          setStatus('playing');
+          audioRef.current.play().catch(e => console.error("Audio autoplay failed:", e));
         }
       } catch (error) {
         console.error('Error with voice interaction:', error);
@@ -161,7 +162,7 @@ export default function VoiceAgent() {
               <AlertTitle>AI Response</AlertTitle>
               <AlertDescription>
                  <p className="mb-2">{result.responseText}</p>
-                 {result.audioOutput && <audio controls src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
+                 {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" ref={audioRef}/>}
               </AlertDescription>
             </Alert>
           </div>

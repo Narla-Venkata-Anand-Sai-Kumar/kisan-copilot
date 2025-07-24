@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { HelpCircle, Languages, Bot } from 'lucide-react';
 import { navigateGovernmentSchemes } from '@/ai/flows/government-scheme-navigation';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,30 @@ export default function SchemeNavigation() {
   const [result, setResult] = useState<{ answer: string, audioOutput: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      audioRef.current = new Audio();
+      audioRef.current.onplay = () => setIsPlaying(true);
+      audioRef.current.onpause = () => setIsPlaying(false);
+      audioRef.current.onended = () => setIsPlaying(false);
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.src = '';
+        }
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (result?.audioOutput && audioRef.current) {
+      audioRef.current.src = result.audioOutput;
+      audioRef.current.play().catch(e => console.error("Audio autoplay failed:", e));
+    }
+  }, [result]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +56,10 @@ export default function SchemeNavigation() {
 
     setIsLoading(true);
     setResult(null);
+    if(audioRef.current) {
+      audioRef.current.pause();
+    }
+
 
     try {
       const response = await navigateGovernmentSchemes({ query, language });
@@ -112,7 +140,7 @@ export default function SchemeNavigation() {
               <Bot className="h-4 w-4" />
               <AlertTitle>Voice Response</AlertTitle>
               <AlertDescription>
-                {result.audioOutput && <audio controls src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
+                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" ref={audioRef} />}
               </AlertDescription>
             </Alert>
           </div>
