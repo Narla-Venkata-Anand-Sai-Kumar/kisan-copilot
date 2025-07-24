@@ -15,8 +15,11 @@ interface InteractionResult {
   responseText: string;
   audioOutput: string;
 }
+interface VoiceAgentProps {
+  language: string;
+}
 
-export default function VoiceAgent() {
+export default function VoiceAgent({ language }: VoiceAgentProps) {
   const [status, setStatus] = useState<Status>('idle');
   const [result, setResult] = useState<InteractionResult | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -78,7 +81,7 @@ export default function VoiceAgent() {
     reader.onloadend = async () => {
       const audioDataUri = reader.result as string;
       try {
-        const response = await voiceFirstInteraction({ audioDataUri });
+        const response = await voiceFirstInteraction({ audioDataUri, language });
         setResult(response);
         if (audioRef.current) {
           audioRef.current.src = response.audioOutput;
@@ -129,9 +132,9 @@ export default function VoiceAgent() {
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Voice Agent (Kannada)</CardTitle>
+        <CardTitle>Voice Agent ({language})</CardTitle>
         <CardDescription>
-          Press the button and speak your query in Kannada. The AI will respond in voice.
+          Press the button and speak your query in {language}. The AI will respond in voice.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center gap-6 p-10">
@@ -162,7 +165,7 @@ export default function VoiceAgent() {
               <AlertTitle>AI Response</AlertTitle>
               <AlertDescription>
                  <p className="mb-2">{result.responseText}</p>
-                 {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" ref={audioRef}/>}
+                 {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
             </Alert>
           </div>

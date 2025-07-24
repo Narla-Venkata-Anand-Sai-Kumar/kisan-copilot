@@ -1,3 +1,5 @@
+'use client';
+import { useState } from 'react';
 import { Leaf, LineChart, Landmark, Mic, Languages } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +10,8 @@ import VoiceAgent from '@/components/feature/voice-agent';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Home() {
+  const [language, setLanguage] = useState('Kannada');
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4 md:px-6 shadow-sm">
@@ -15,7 +19,7 @@ export default function Home() {
           Kisan Copilot
         </h1>
         <div className="flex items-center gap-2">
-            <Select defaultValue="Kannada">
+            <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger id="language-global" className="w-[150px]">
                   <Languages className="mr-2 h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder="Select language" />
@@ -51,16 +55,16 @@ export default function Home() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="crop-diagnosis">
-            <CropDiagnosis />
+            <CropDiagnosis language={language} />
           </TabsContent>
           <TabsContent value="price-forecasting">
-            <PriceForecasting />
+            <PriceForecasting language={language} />
           </TabsContent>
           <TabsContent value="scheme-navigation">
-            <SchemeNavigation />
+            <SchemeNavigation language={language} />
           </TabsContent>
           <TabsContent value="voice-agent">
-            <VoiceAgent />
+            <VoiceAgent language={language} />
           </TabsContent>
         </Tabs>
       </main>

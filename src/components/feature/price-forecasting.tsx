@@ -11,21 +11,22 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function PriceForecasting() {
+interface PriceForecastingProps {
+  language: string;
+}
+
+export default function PriceForecasting({ language }: PriceForecastingProps) {
   const [crop, setCrop] = useState('');
   const [location, setLocation] = useState('');
   const [result, setResult] = useState<{ forecast: string; suggestion: string; audioOutput: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio();
-      audioRef.current.onplay = () => setIsPlaying(true);
-      audioRef.current.onpause = () => setIsPlaying(false);
-      audioRef.current.onended = () => setIsPlaying(false);
+      const audio = new Audio();
+      audioRef.current = audio;
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
@@ -60,7 +61,7 @@ export default function PriceForecasting() {
     }
 
     try {
-      const response = await marketPriceForecasting({ crop, location });
+      const response = await marketPriceForecasting({ crop, location, language });
       setResult(response);
     } catch (error) {
       console.error('Error fetching price forecast:', error);
@@ -78,7 +79,7 @@ export default function PriceForecasting() {
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle>Market Price Forecasting</CardTitle>
-        <CardDescription>Get real-time market price forecasts and selling suggestions in Kannada.</CardDescription>
+        <CardDescription>Get real-time market price forecasts and selling suggestions in your selected language.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -120,18 +121,18 @@ export default function PriceForecasting() {
         {result && (
           <div className="space-y-4 pt-6">
             <Alert>
-              <AlertTitle>Forecast (in Kannada)</AlertTitle>
+              <AlertTitle>Forecast (in {language})</AlertTitle>
               <AlertDescription className="text-lg font-semibold">{result.forecast}</AlertDescription>
             </Alert>
             <Alert>
-              <AlertTitle>Suggestion (in Kannada)</AlertTitle>
+              <AlertTitle>Suggestion (in {language})</AlertTitle>
               <AlertDescription className="text-lg font-semibold">{result.suggestion}</AlertDescription>
             </Alert>
              <Alert>
               <Bot className="h-4 w-4" />
               <AlertTitle>Voice Response</AlertTitle>
               <AlertDescription>
-                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" ref={audioRef} />}
+                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
             </Alert>
           </div>

@@ -12,7 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function CropDiagnosis() {
+interface CropDiagnosisProps {
+  language: string;
+}
+
+export default function CropDiagnosis({ language }: CropDiagnosisProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [result, setResult] = useState<{ diagnosis: string; remedies: string; audioOutput: string; } | null>(null);
@@ -23,10 +27,11 @@ export default function CropDiagnosis() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio();
-      audioRef.current.onplay = () => setIsPlaying(true);
-      audioRef.current.onpause = () => setIsPlaying(false);
-      audioRef.current.onended = () => setIsPlaying(false);
+      const audio = new Audio();
+      audioRef.current = audio;
+      audio.onplay = () => setIsPlaying(true);
+      audio.onpause = () => setIsPlaying(false);
+      audio.onended = () => setIsPlaying(false);
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
@@ -72,13 +77,12 @@ export default function CropDiagnosis() {
         audioRef.current.pause();
     }
 
-
     const reader = new FileReader();
     reader.readAsDataURL(imageFile);
     reader.onloadend = async () => {
       const photoDataUri = reader.result as string;
       try {
-        const response = await diagnoseCropDisease({ photoDataUri });
+        const response = await diagnoseCropDisease({ photoDataUri, language });
         setResult(response);
       } catch (error) {
         console.error('Error diagnosing crop disease:', error);
@@ -157,14 +161,14 @@ export default function CropDiagnosis() {
             </Alert>
             <Alert>
               <Stethoscope className="h-4 w-4" />
-              <AlertTitle>Remedies (in Kannada)</AlertTitle>
+              <AlertTitle>Remedies (in {language})</AlertTitle>
               <AlertDescription className="font-semibold">{result.remedies}</AlertDescription>
             </Alert>
             <Alert>
               <Bot className="h-4 w-4" />
               <AlertTitle>Voice Response</AlertTitle>
               <AlertDescription>
-                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" ref={audioRef} />}
+                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
             </Alert>
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { HelpCircle, Languages, Bot } from 'lucide-react';
+import { HelpCircle, Bot } from 'lucide-react';
 import { navigateGovernmentSchemes } from '@/ai/flows/government-scheme-navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,24 +9,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function SchemeNavigation() {
+interface SchemeNavigationProps {
+  language: string;
+}
+
+export default function SchemeNavigation({ language }: SchemeNavigationProps) {
   const [query, setQuery] = useState('');
-  const [language, setLanguage] = useState('Kannada');
   const [result, setResult] = useState<{ answer: string, audioOutput: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio();
-      audioRef.current.onplay = () => setIsPlaying(true);
-      audioRef.current.onpause = () => setIsPlaying(false);
-      audioRef.current.onended = () => setIsPlaying(false);
+      const audio = new Audio();
+      audioRef.current = audio;
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
@@ -59,7 +58,6 @@ export default function SchemeNavigation() {
     if(audioRef.current) {
       audioRef.current.pause();
     }
-
 
     try {
       const response = await navigateGovernmentSchemes({ query, language });
@@ -96,20 +94,7 @@ export default function SchemeNavigation() {
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <div className="space-y-1.5 flex-grow">
-              <Label htmlFor="language">Language</Label>
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger id="language" className="w-full md:w-[200px]">
-                  <Languages className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Kannada">Kannada</SelectItem>
-                  <SelectItem value="English">English</SelectItem>
-                  <SelectItem value="Hindi">Hindi</SelectItem>
-                  <SelectItem value="Tamil">Tamil</SelectItem>
-                  <SelectItem value="Telugu">Telugu</SelectItem>
-                </SelectContent>
-              </Select>
+               <Label>Language: {language}</Label>
             </div>
             <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
               <HelpCircle className="mr-2 h-4 w-4" />
@@ -131,7 +116,7 @@ export default function SchemeNavigation() {
           <div className="pt-6 space-y-4">
             <Alert>
               <Bot className="h-4 w-4" />
-              <AlertTitle>Answer</AlertTitle>
+              <AlertTitle>Answer (in {language})</AlertTitle>
               <AlertDescription>
                 <p className="whitespace-pre-wrap">{result.answer}</p>
               </AlertDescription>
@@ -140,7 +125,7 @@ export default function SchemeNavigation() {
               <Bot className="h-4 w-4" />
               <AlertTitle>Voice Response</AlertTitle>
               <AlertDescription>
-                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" ref={audioRef} />}
+                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
             </Alert>
           </div>

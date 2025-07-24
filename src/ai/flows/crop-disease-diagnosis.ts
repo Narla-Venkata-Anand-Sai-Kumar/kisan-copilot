@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Diagnoses plant diseases from an image and suggests remedies in Kannada.
+ * @fileOverview Diagnoses plant diseases from an image and suggests remedies in the specified language.
  *
  * - diagnoseCropDisease - A function that handles the plant disease diagnosis process.
  * - DiagnoseCropDiseaseInput - The input type for the diagnoseCropDisease function.
@@ -16,14 +16,15 @@ const DiagnoseCropDiseaseInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      'A photo of a plant, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.' // Corrected the expected format in the description
+      "A photo of a plant, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
+  language: z.string().describe('The language for the diagnosis and remedies.'),
 });
 export type DiagnoseCropDiseaseInput = z.infer<typeof DiagnoseCropDiseaseInputSchema>;
 
 const DiagnoseCropDiseaseOutputSchema = z.object({
   diagnosis: z.string().describe('The diagnosis of the plant disease.'),
-  remedies: z.string().describe('Suggested remedies for the plant disease in Kannada.'),
+  remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
   audioOutput: z.string().describe('Audio output in WAV format as a data URI.'),
 });
 export type DiagnoseCropDiseaseOutput = z.infer<typeof DiagnoseCropDiseaseOutputSchema>;
@@ -66,10 +67,11 @@ const diagnosisPrompt = ai.definePrompt({
   input: {schema: DiagnoseCropDiseaseInputSchema},
   output: {schema: z.object({
     diagnosis: z.string().describe('The diagnosis of the plant disease.'),
-    remedies: z.string().describe('Suggested remedies for the plant disease in Kannada.'),
+    remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
   })},
-  prompt: `You are an expert in plant diseases. Diagnose the disease in the plant shown in the image and suggest remedies in Kannada.
+  prompt: `You are an expert in plant diseases. Diagnose the disease in the plant shown in the image and suggest remedies in the specified language.
 
+  Language: {{{language}}}
   Image: {{media url=photoDataUri}}
 `,
 });

@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Provides real-time market price forecasts and selling suggestions in Kannada.
+ * @fileOverview Provides real-time market price forecasts and selling suggestions in the specified language.
  *
  * - marketPriceForecasting - A function that returns market price forecasts and selling suggestions.
  * - MarketPriceForecastingInput - The input type for the marketPriceForecasting function.
@@ -15,13 +15,14 @@ import wav from 'wav';
 const MarketPriceForecastingInputSchema = z.object({
   crop: z.string().describe('The crop for which to forecast the market price.'),
   location: z.string().describe('The location for which to forecast the market price.'),
+  language: z.string().describe('The language for the forecast and suggestion.'),
 });
 
 export type MarketPriceForecastingInput = z.infer<typeof MarketPriceForecastingInputSchema>;
 
 const MarketPriceForecastingOutputSchema = z.object({
-  forecast: z.string().describe('The market price forecast for the specified crop and location in Kannada.'),
-  suggestion: z.string().describe('A selling suggestion based on the market price forecast in Kannada.'),
+  forecast: z.string().describe('The market price forecast for the specified crop and location in the specified language.'),
+  suggestion: z.string().describe('A selling suggestion based on the market price forecast in the specified language.'),
   audioOutput: z.string().describe('Audio output in WAV format as a data URI.'),
 });
 
@@ -62,13 +63,14 @@ const marketPriceForecastingPrompt = ai.definePrompt({
   name: 'marketPriceForecastingPrompt',
   input: {schema: MarketPriceForecastingInputSchema},
   output: {schema: z.object({
-    forecast: z.string().describe('The market price forecast for the specified crop and location in Kannada.'),
-    suggestion: z.string().describe('A selling suggestion based on the market price forecast in Kannada.'),
+    forecast: z.string().describe('The market price forecast for the specified crop and location in the specified language.'),
+    suggestion: z.string().describe('A selling suggestion based on the market price forecast in the specified language.'),
   })},
   prompt: `You are an AI assistant providing market price forecasts and selling suggestions to farmers.
 
-  Provide the forecast and suggestion in Kannada.
-
+  Provide the forecast and suggestion in the specified language.
+  
+  Language: {{{language}}}
   Crop: {{{crop}}}
   Location: {{{location}}}
 

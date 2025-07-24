@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Voice-First AI for farmer interaction in Kannada.
+ * @fileOverview Voice-First AI for farmer interaction in a specified language.
  *
  * - voiceFirstInteraction - A function that handles voice input, STT, LLM processing, and TTS output.
  * - VoiceFirstInteractionInput - The input type for the voiceFirstInteraction function.
@@ -18,6 +18,7 @@ const VoiceFirstInteractionInputSchema = z.object({
     .describe(
       'Audio data as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
     ),
+  language: z.string().describe('The language for the interaction.'),
 });
 export type VoiceFirstInteractionInput = z.infer<typeof VoiceFirstInteractionInputSchema>;
 
@@ -70,7 +71,7 @@ const voiceFirstInteractionFlow = ai.defineFlow(
     const sttResult = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: [
-        { text: "Transcribe the following audio. The primary language is Kannada, but transcribe other languages if spoken." },
+        { text: `Transcribe the following audio. The primary language is ${input.language}, but transcribe other languages if spoken.` },
         { media: { url: input.audioDataUri } },
       ],
     });
@@ -109,7 +110,7 @@ const voiceFirstInteractionFlow = ai.defineFlow(
     }
     
     const llmResult = await ai.generate({
-      prompt: `You are a helpful assistant for farmers. The user said: "${transcribedText}". Provide a helpful response in Kannada.`
+      prompt: `You are a helpful assistant for farmers. The user said: "${transcribedText}". Provide a helpful response in ${input.language}.`
     });
 
     const responseText = llmResult.text
@@ -128,7 +129,7 @@ const voiceFirstInteractionFlow = ai.defineFlow(
       prompt: responseText,
     });
 
-    if (!media) {
+    if (!media?.url) {
       throw new Error('no media returned');
     }
 
