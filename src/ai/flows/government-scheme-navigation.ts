@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
+import { searchGovernmentSchemes } from '@/services/scheme-search-service';
 
 const NavigateGovernmentSchemesInputSchema = z.object({
   query: z.string().describe('The query about government schemes.'),
@@ -33,6 +34,20 @@ export async function navigateGovernmentSchemes(
 ): Promise<NavigateGovernmentSchemesOutput> {
   return navigateGovernmentSchemesFlow(input);
 }
+
+const getSchemeInfoTool = ai.defineTool(
+    {
+      name: 'getSchemeInfo',
+      description: 'Searches official government websites and agricultural portals to get information about a specific scheme. This should be used to answer any user query about government schemes.',
+      inputSchema: z.object({
+        query: z.string().describe('The user\'s question about a government scheme.'),
+      }),
+      outputSchema: z.string().describe('A summary of the information found about the scheme.'),
+    },
+    async (input) => {
+        return searchGovernmentSchemes(input.query);
+    }
+);
 
 async function toWav(
   pcmData: Buffer,
@@ -67,7 +82,13 @@ const schemesPrompt = ai.definePrompt({
   output: {schema: z.object({
     answer: z.string().describe('The answer to the query about government schemes.'),
   })},
-  prompt: `You are an expert in Indian government schemes for farmers. Answer the following question about government schemes in the given language. Use the available information to provide an accurate and helpful response.
+  tools: [getSchemeInfoTool],
+  prompt: `You are an expert agent specializing in Indian government schemes for farmers.
+Your task is to answer user questions accurately by using the provided tool.
+
+1. Use the 'getSchemeInfo' tool to search the web and find information related to the user's query.
+2. Synthesize the information returned by the tool into a clear and concise answer.
+3. Provide the entire response in the user-specified language.
 
 Question: {{{query}}}
 Language: {{{language}}}`,

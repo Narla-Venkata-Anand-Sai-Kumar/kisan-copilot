@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
 import { translations } from '@/lib/i18n';
 
 type Status = 'idle' | 'recording' | 'processing-audio' | 'processing-text';
@@ -21,6 +20,7 @@ interface SchemeNavigationProps {
 
 export default function SchemeNavigation({ language }: SchemeNavigationProps) {
   const [query, setQuery] = useState('');
+  const [submittedQuery, setSubmittedQuery] = useState('');
   const [result, setResult] = useState<{ answer: string; audioOutput: string } | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const { toast } = useToast();
@@ -54,6 +54,7 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
   const startRecording = async () => {
     setResult(null);
     setQuery('');
+    setSubmittedQuery('');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
@@ -90,9 +91,10 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
       const audioDataUri = reader.result as string;
       try {
         const response = await transcribeSchemeQuery({ audioDataUri, language });
-        setQuery(response.transcribedText);
+        const transcribedText = response.transcribedText;
+        setQuery(transcribedText);
         // Automatically trigger the search after transcription
-        await handleSearch(response.transcribedText);
+        await handleSearch(transcribedText);
       } catch (error) {
         console.error('Error with voice interaction:', error);
         toast({
@@ -111,7 +113,7 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
   };
   
   const handleSearch = async (searchText: string) => {
-    if (!searchText) {
+    if (!searchText.trim()) {
       toast({
         title: t.questionIsEmpty,
         description: t.enterYourQuestion,
@@ -123,6 +125,7 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
 
     setStatus('processing-text');
     setResult(null);
+    setSubmittedQuery(searchText);
     if (audioRef.current) {
       audioRef.current.pause();
     }
@@ -173,7 +176,7 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
                 <Square className="mr-2 h-4 w-4" /> {t.stopRecording}
               </Button>
             ) : (
-              <Button onClick={startRecording} disabled={isLoading} variant="outline" className="w-full sm:w-auto">
+              <Button onClick={startRecording} disabled={isLoading} variant="outline" type="button" className="w-full sm:w-auto">
                 <Mic className="mr-2 h-4 w-4" />
                 {status === 'processing-audio' ? t.processing : t.askWithVoice}
               </Button>
@@ -192,12 +195,12 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
 
         {result && (
           <div className="pt-6 space-y-4">
-            {query && (
+            {submittedQuery && (
                <Alert>
                   <User className="h-4 w-4" />
                   <AlertTitle>{t.yourQuery}</AlertTitle>
                   <AlertDescription>
-                    <p className="font-semibold">{query}</p>
+                    <p className="font-semibold">{submittedQuery}</p>
                   </AlertDescription>
               </Alert>
             )}
@@ -206,12 +209,6 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
               <AlertTitle>{t.answerIn(language)}</AlertTitle>
               <AlertDescription>
                 <p className="whitespace-pre-wrap">{result.answer}</p>
-              </AlertDescription>
-            </Alert>
-            <Alert>
-              <Bot className="h-4 w-4" />
-              <AlertTitle>{t.voiceResponse}</AlertTitle>
-              <AlertDescription>
                 {result.audioOutput && (
                   <audio
                     controls
