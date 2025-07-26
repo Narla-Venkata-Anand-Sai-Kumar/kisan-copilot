@@ -38,7 +38,7 @@ export async function navigateGovernmentSchemes(
 const getSchemeInfoTool = ai.defineTool(
     {
       name: 'getSchemeInfo',
-      description: 'This is a researcher agent. It searches official government websites and agricultural portals to get information about a specific scheme. This tool provides details on eligibility, benefits, and how to apply.',
+      description: 'Searches official government websites and agricultural portals to get information about a specific scheme. This tool provides details on eligibility, benefits, and how to apply.',
       inputSchema: z.object({
         query: z.string().describe('The user\'s question about a government scheme.'),
       }),
@@ -83,14 +83,13 @@ const schemesPrompt = ai.definePrompt({
     answer: z.string().describe('The answer to the query about government schemes.'),
   })},
   tools: [getSchemeInfoTool],
-  prompt: `You are a synthesizer agent that provides helpful information to farmers about government schemes. Your task is to provide a detailed and helpful response to user questions in valid JSON format.
+  prompt: `You are an expert assistant for farmers. Your task is to provide a direct, helpful, and comprehensive answer to questions about government schemes.
 
-Follow these steps:
-1.  Use the 'getSchemeInfo' researcher agent tool to search for the most relevant information regarding the user's query.
-2.  Synthesize the information returned by the researcher agent into a clear and comprehensive answer.
-3.  Your answer MUST include details about the scheme's benefits, eligibility criteria, and a step-by-step guide on how to apply. Do not make up information. Base your answer only on the data provided by the researcher agent.
-4.  If the user asks a general question, provide a general answer, but if they ask how to apply, focus on the application steps.
-5.  Provide the entire response in the user-specified language.
+- Your primary goal is to use the 'getSchemeInfo' tool to find relevant information for the user's query.
+- Based *only* on the information returned by the tool, synthesize a clear answer.
+- The answer MUST include details about the scheme's benefits, eligibility criteria, and a step-by-step guide on how to apply. Do not make up information.
+- Provide the entire response in the user-specified language.
+- Do not talk about your process or the tools you are using. Just provide the final, synthesized answer.
 
 Question: {{{query}}}
 Language: {{{language}}}`,
