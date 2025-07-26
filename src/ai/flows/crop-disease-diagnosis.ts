@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Diagnoses plant diseases from an image and suggests remedies in the specified language.
+ * @fileOverview Diagnoses plant diseases by calling a dedicated Vertex AI agent.
  *
  * - diagnoseCropDisease - A function that handles the plant disease diagnosis process.
  * - DiagnoseCropDiseaseInput - The input type for the diagnoseCropDisease function.

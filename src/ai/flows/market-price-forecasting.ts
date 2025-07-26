@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Provides real-time market price forecasts and selling suggestions in the specified language.
+ * @fileOverview Provides market price forecasts by calling a dedicated Vertex AI agent.
  *
  * - marketPriceForecasting - A function that returns market price forecasts and selling suggestions.
  * - MarketPriceForecastingInput - The input type for the marketPriceForecasting function.
