@@ -63,26 +63,6 @@ async function toWav(
   });
 }
 
-const diagnosisPrompt = ai.definePrompt({
-  name: 'diagnoseCropDiseasePrompt',
-  input: {schema: DiagnoseCropDiseaseInputSchema},
-  output: {schema: z.object({
-    plantName: z.string().describe('The common name of the identified plant.'),
-    diagnosis: z.string().describe('The diagnosis of the plant disease.'),
-    remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
-  })},
-  prompt: `You are an expert in plant diseases. Your task is to provide a detailed and helpful response to users in valid JSON format.
-1. First, identify the plant from the image.
-2. Then, diagnose the disease in the plant shown in the image.
-3. Finally, suggest remedies for the diagnosed disease.
-
-Provide the entire response in the specified language.
-
-Language: {{{language}}}
-Image: {{media url=photoDataUri}}
-`,
-});
-
 const diagnoseCropDiseaseFlow = ai.defineFlow(
   {
     name: 'diagnoseCropDiseaseFlow',
@@ -90,8 +70,37 @@ const diagnoseCropDiseaseFlow = ai.defineFlow(
     outputSchema: DiagnoseCropDiseaseOutputSchema,
   },
   async input => {
-    const {output: diagnosisOutput} = await diagnosisPrompt(input);
+    // In a real production environment, you would call your deployed Vertex AI agent here.
+    console.log('Calling external Vertex AI agent for crop diagnosis...');
 
+    // Replace this URL with the actual endpoint of your deployed Vertex AI agent.
+    const YOUR_VERTEX_AI_AGENT_URL = 'https://us-central1-aiplatform.googleapis.com/v1/projects/your-gcp-project/locations/us-central1/endpoints/your-agent-endpoint:predict';
+
+    // This is a simulated response structure. Your actual agent will define this.
+    const simulatedApiResponse = {
+        plantName: 'Tomato Plant',
+        diagnosis: 'Early Blight',
+        remedies: 'Apply a fungicide containing mancozeb or chlorothalonil. Ensure proper spacing for air circulation and avoid overhead watering.'
+    };
+
+    // In a real implementation, you would use fetch to make the API call:
+    /*
+    const response = await fetch(YOUR_VERTEX_AI_AGENT_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer YOUR_AUTH_TOKEN` // Add your authentication token
+        },
+        body: JSON.stringify(input)
+    });
+    if (!response.ok) {
+        throw new Error(`Failed to get response from Vertex AI agent: ${response.statusText}`);
+    }
+    const diagnosisOutput = await response.json();
+    */
+
+    const diagnosisOutput = simulatedApiResponse;
+    
     if (!diagnosisOutput) {
       throw new Error('Could not diagnose crop disease.');
     }

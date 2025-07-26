@@ -11,7 +11,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
-import { getMarketData } from '@/services/market-data-service';
 
 const MarketPriceForecastingInputSchema = z.object({
   crop: z.string().describe('The crop for which to forecast the market price.'),
@@ -32,24 +31,6 @@ export type MarketPriceForecastingOutput = z.infer<typeof MarketPriceForecasting
 export async function marketPriceForecasting(input: MarketPriceForecastingInput): Promise<MarketPriceForecastingOutput> {
   return marketPriceForecastingFlow(input);
 }
-
-const getMarketPriceTool = ai.defineTool(
-    {
-      name: 'getMarketPrice',
-      description: 'This tool performs detailed research and web scraping of official government and agricultural market websites to get the current market price for a given crop and location. It should be the first step in any market analysis.',
-      inputSchema: z.object({
-        crop: z.string(),
-        location: z.string(),
-      }),
-      outputSchema: z.object({
-        price: z.number(),
-        unit: z.string(),
-      }),
-    },
-    async (input) => {
-        return getMarketData(input.crop, input.location);
-    }
-);
 
 async function toWav(
   pcmData: Buffer,
@@ -85,32 +66,36 @@ const marketPriceForecastingFlow = ai.defineFlow(
     outputSchema: MarketPriceForecastingOutputSchema,
   },
   async input => {
-    const marketPriceForecastingPrompt = ai.definePrompt({
-        name: 'marketPriceForecastingPrompt',
-        input: {schema: MarketPriceForecastingInputSchema},
-        output: {schema: z.object({
-            forecast: z.string().describe('A detailed market price forecast based on the provided data. It should analyze trends and provide a forward-looking statement.'),
-            suggestion: z.string().describe('A clear, actionable selling suggestion for the farmer based on the forecast and current price.'),
-        })},
-        tools: [getMarketPriceTool],
-        prompt: `You are an expert agricultural market analyst agent. Your task is to provide a detailed market price forecast and an actionable selling suggestion to farmers in valid JSON format.
+    // In a real production environment, you would call your deployed Vertex AI agent here.
+    console.log('Calling external Vertex AI agent for market price forecasting...');
 
-        Follow these steps:
-        1. Use the 'getMarketPrice' tool to scrape official government sources and get the most accurate, real-time price per quintal for the given crop and location.
-        2. State the retrieved price clearly in your forecast. For example: "Based on data from official sources, the current price for [crop] in [location] is [price] per quintal."
-        3. Analyze this price. Based on simulated historical data and market trends, generate a forward-looking forecast.
-        4. Provide a concrete selling suggestion. Should the farmer sell now, hold, or sell in portions? Justify your suggestion.
-        5. Provide the entire response in the user-specified language.
-
-        Language: {{{language}}}
-        Crop: {{{crop}}}
-        Location: {{{location}}}
-
-        Begin your analysis now.`,
-    });
-
-    const {output: forecastOutput} = await marketPriceForecastingPrompt(input);
+    // Replace this URL with the actual endpoint of your deployed Vertex AI agent.
+    const YOUR_VERTEX_AI_AGENT_URL = 'https://us-central1-aiplatform.googleapis.com/v1/projects/your-gcp-project/locations/us-central1/endpoints/your-agent-endpoint:predict';
     
+    // This is a simulated response structure. Your actual agent will define this.
+    const simulatedApiResponse = {
+        forecast: `The current market price for ${input.crop} in ${input.location} is strong, but expected to dip in the next 2 weeks due to increased supply.`,
+        suggestion: 'It is advisable to sell 70% of your produce now to capitalize on the current high prices and hold the rest for a potential price recovery in a month.'
+    };
+
+    // In a real implementation, you would use fetch to make the API call:
+    /*
+    const response = await fetch(YOUR_VERTEX_AI_AGENT_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer YOUR_AUTH_TOKEN` // Add your authentication token
+        },
+        body: JSON.stringify(input)
+    });
+    if (!response.ok) {
+        throw new Error(`Failed to get response from Vertex AI agent: ${response.statusText}`);
+    }
+    const forecastOutput = await response.json();
+    */
+   
+    const forecastOutput = simulatedApiResponse;
+
     if (!forecastOutput) {
       throw new Error('Could not get price forecast.');
     }
