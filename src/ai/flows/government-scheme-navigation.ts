@@ -11,7 +11,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
-import { searchGovernmentSchemes } from '@/services/scheme-search-service';
 
 const NavigateGovernmentSchemesInputSchema = z.object({
   query: z.string().describe('The query about government schemes.'),
@@ -34,20 +33,6 @@ export async function navigateGovernmentSchemes(
 ): Promise<NavigateGovernmentSchemesOutput> {
   return navigateGovernmentSchemesFlow(input);
 }
-
-const getSchemeInfoTool = ai.defineTool(
-    {
-      name: 'getSchemeInfo',
-      description: 'Searches official government websites and agricultural portals to get information about a specific scheme. This tool provides details on eligibility, benefits, and how to apply.',
-      inputSchema: z.object({
-        query: z.string().describe('The user\'s question about a government scheme.'),
-      }),
-      outputSchema: z.string().describe('A summary of the information found about the scheme, including application steps.'),
-    },
-    async (input) => {
-        return searchGovernmentSchemes(input.query);
-    }
-);
 
 async function toWav(
   pcmData: Buffer,
@@ -76,25 +61,6 @@ async function toWav(
   });
 }
 
-const schemesPrompt = ai.definePrompt({
-  name: 'navigateGovernmentSchemesPrompt',
-  input: {schema: NavigateGovernmentSchemesInputSchema},
-  output: {schema: z.object({
-    answer: z.string().describe('The answer to the query about government schemes.'),
-  })},
-  tools: [getSchemeInfoTool],
-  prompt: `You are an expert assistant for farmers. Your task is to provide a direct, helpful, and comprehensive answer to questions about government schemes.
-
-- Your primary goal is to use the 'getSchemeInfo' tool to find relevant information for the user's query.
-- Based *only* on the information returned by the tool, synthesize a clear answer.
-- The answer MUST include details about the scheme's benefits, eligibility criteria, and a step-by-step guide on how to apply. Do not make up information.
-- Provide the entire response in the user-specified language.
-- Do not talk about your process or the tools you are using. Just provide the final, synthesized answer.
-
-Question: {{{query}}}
-Language: {{{language}}}`,
-});
-
 const navigateGovernmentSchemesFlow = ai.defineFlow(
   {
     name: 'navigateGovernmentSchemesFlow',
@@ -102,9 +68,39 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
     outputSchema: NavigateGovernmentSchemesOutputSchema,
   },
   async input => {
-    const {output: schemesOutput} = await schemesPrompt(input);
-    if(!schemesOutput) {
-      throw new Error('Could not get scheme information.');
+    // In a real production environment, you would call your deployed Vertex AI agent here.
+    // This example simulates that call.
+    console.log('Calling external Vertex AI agent for scheme navigation...');
+
+    // Replace this URL with the actual endpoint of your deployed Vertex AI agent.
+    const YOUR_VERTEX_AI_AGENT_URL = 'https://us-central1-aiplatform.googleapis.com/v1/projects/your-gcp-project/locations/us-central1/endpoints/your-agent-endpoint:predict';
+
+    // This is a simulated response structure. Your actual agent will define this.
+    const simulatedApiResponse = {
+        answer: `This is a detailed response from the external Vertex AI agent for the query: "${input.query}". The agent would perform advanced RAG and web scraping to provide the following information:\n\n**Benefits:** It provides income support of Rs. 6,000 per year in three equal installments to eligible farmer families.\n**Eligibility:** All landholding farmer families are eligible, subject to certain exclusion criteria.\n**How to Apply:**\n1. Go to the official PM-KISAN portal.\n2. Click on 'New Farmer Registration'.\n3. Enter Aadhaar, land, and bank details.`
+    };
+
+    // In a real implementation, you would use fetch to make the API call:
+    /*
+    const response = await fetch(YOUR_VERTEX_AI_AGENT_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer YOUR_AUTH_TOKEN` // Add your authentication token
+        },
+        body: JSON.stringify(input)
+    });
+    if (!response.ok) {
+        throw new Error(`Failed to get response from Vertex AI agent: ${response.statusText}`);
+    }
+    const schemesOutput = await response.json();
+    */
+
+    // Using the simulated response for this example:
+    const schemesOutput = simulatedApiResponse;
+
+    if (!schemesOutput || !schemesOutput.answer) {
+      throw new Error('Could not get scheme information from the external agent.');
     }
 
     let audioOutput = '';
