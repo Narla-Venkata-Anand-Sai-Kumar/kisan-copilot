@@ -66,38 +66,34 @@ const marketPriceForecastingFlow = ai.defineFlow(
     outputSchema: MarketPriceForecastingOutputSchema,
   },
   async input => {
-    // In a real production environment, you would call your deployed Vertex AI agent here.
-    console.log('Calling external Vertex AI agent for market price forecasting...');
+    console.log('Calling external Cloud Run agent for market price forecasting...');
 
-    // Replace this URL with the actual endpoint of your deployed Vertex AI agent.
-    const YOUR_VERTEX_AI_AGENT_URL = 'https://us-central1-aiplatform.googleapis.com/v1/projects/your-gcp-project/locations/us-central1/endpoints/your-agent-endpoint:predict';
+    // IMPORTANT: Replace this URL with the actual URL of your deployed Cloud Run agent.
+    const YOUR_CLOUD_RUN_AGENT_URL = 'https://your-market-price-agent-url.a.run.app';
     
-    // This is a simulated response structure. Your actual agent will define this.
-    const simulatedApiResponse = {
-        forecast: `The current market price for ${input.crop} in ${input.location} is strong, but expected to dip in the next 2 weeks due to increased supply.`,
-        suggestion: 'It is advisable to sell 70% of your produce now to capitalize on the current high prices and hold the rest for a potential price recovery in a month.'
-    };
-
-    // In a real implementation, you would use fetch to make the API call:
-    /*
-    const response = await fetch(YOUR_VERTEX_AI_AGENT_URL, {
+    // In a real implementation, you would use fetch to make the API call.
+    // If your Cloud Run service is not public, you will need to handle authentication.
+    // The recommended way is to use an ID token from the service account running this app.
+    // For simplicity, this example assumes a public endpoint or auth handled elsewhere.
+    const response = await fetch(YOUR_CLOUD_RUN_AGENT_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer YOUR_AUTH_TOKEN` // Add your authentication token
+            // 'Authorization': `Bearer YOUR_ID_TOKEN` // Add your auth token if required
         },
-        body: JSON.stringify(input)
+        body: JSON.stringify({ "crop": input.crop, "location": input.location, "language": input.language })
     });
-    if (!response.ok) {
-        throw new Error(`Failed to get response from Vertex AI agent: ${response.statusText}`);
-    }
-    const forecastOutput = await response.json();
-    */
-   
-    const forecastOutput = simulatedApiResponse;
 
-    if (!forecastOutput) {
-      throw new Error('Could not get price forecast.');
+    if (!response.ok) {
+        throw new Error(`Failed to get response from Cloud Run agent: ${response.statusText}`);
+    }
+    
+    // This assumes your agent returns JSON with 'forecast' and 'suggestion' fields.
+    // Adjust this based on your agent's actual response structure.
+    const forecastOutput = await response.json();
+   
+    if (!forecastOutput || !forecastOutput.forecast || !forecastOutput.suggestion) {
+      throw new Error('Could not get price forecast from the external agent.');
     }
     
     let audioOutput = '';

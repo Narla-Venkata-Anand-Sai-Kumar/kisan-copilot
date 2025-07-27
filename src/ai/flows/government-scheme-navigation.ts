@@ -68,37 +68,32 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
     outputSchema: NavigateGovernmentSchemesOutputSchema,
   },
   async input => {
-    // In a real production environment, you would call your deployed Vertex AI agent here.
-    // This example simulates that call.
-    console.log('Calling external Vertex AI agent for scheme navigation...');
+    console.log('Calling external Cloud Run agent for scheme navigation...');
 
-    // Replace this URL with the actual endpoint of your deployed Vertex AI agent.
-    const YOUR_VERTEX_AI_AGENT_URL = 'https://us-central1-aiplatform.googleapis.com/v1/projects/your-gcp-project/locations/us-central1/endpoints/your-agent-endpoint:predict';
+    // IMPORTANT: Replace this URL with the actual URL of your deployed Cloud Run agent.
+    const YOUR_CLOUD_RUN_AGENT_URL = 'https://your-scheme-agent-url.a.run.app';
 
-    // This is a simulated response structure. Your actual agent will define this.
-    const simulatedApiResponse = {
-        answer: `This is a detailed response from the external Vertex AI agent for the query: "${input.query}". The agent would perform advanced RAG and web scraping to provide the following information:\n\n**Benefits:** It provides income support of Rs. 6,000 per year in three equal installments to eligible farmer families.\n**Eligibility:** All landholding farmer families are eligible, subject to certain exclusion criteria.\n**How to Apply:**\n1. Go to the official PM-KISAN portal.\n2. Click on 'New Farmer Registration'.\n3. Enter Aadhaar, land, and bank details.`
-    };
-
-    // In a real implementation, you would use fetch to make the API call:
-    /*
-    const response = await fetch(YOUR_VERTEX_AI_AGENT_URL, {
+    // In a real implementation, you would use fetch to make the API call.
+    // If your Cloud Run service is not public, you will need to handle authentication.
+    // The recommended way is to use an ID token from the service account running this app.
+    // For simplicity, this example assumes a public endpoint or auth handled elsewhere.
+    const response = await fetch(YOUR_CLOUD_RUN_AGENT_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer YOUR_AUTH_TOKEN` // Add your authentication token
+            // 'Authorization': `Bearer YOUR_ID_TOKEN` // Add your auth token if required
         },
-        body: JSON.stringify(input)
+        body: JSON.stringify({ "query": input.query, "language": input.language })
     });
+
     if (!response.ok) {
-        throw new Error(`Failed to get response from Vertex AI agent: ${response.statusText}`);
+        throw new Error(`Failed to get response from Cloud Run agent: ${response.statusText}`);
     }
+    
+    // This assumes your agent returns a JSON object with an 'answer' field.
+    // Adjust this based on your agent's actual response structure.
     const schemesOutput = await response.json();
-    */
-
-    // Using the simulated response for this example:
-    const schemesOutput = simulatedApiResponse;
-
+    
     if (!schemesOutput || !schemesOutput.answer) {
       throw new Error('Could not get scheme information from the external agent.');
     }
