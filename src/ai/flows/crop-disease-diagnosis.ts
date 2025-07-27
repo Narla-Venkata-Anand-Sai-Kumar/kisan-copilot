@@ -25,7 +25,7 @@ export type DiagnoseCropDiseaseInput = z.infer<typeof DiagnoseCropDiseaseInputSc
 
 const ProductSuggestionSchema = z.object({
     name: z.string().describe("The commercial name of the suggested product."),
-    type: z.enum(["Fungicide", "Insecticide", "Fertilizer", "Organic", "Other"]).describe("The type of product."),
+    type: z.string().describe("The type of product (e.g., Fungicide, Insecticide, Pesticide)."),
     description: z.string().describe("A brief description of why this product is recommended.")
 });
 
