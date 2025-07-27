@@ -27,13 +27,11 @@ export default function PriceForecasting() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const audio = new Audio();
-      audioRef.current = audio;
-      audio.autoplay = true;
+      audioRef.current = new Audio();
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
-          audioRef.current.src = '';
+          audioRef.current = null;
         }
       };
     }
@@ -42,6 +40,7 @@ export default function PriceForecasting() {
   useEffect(() => {
     if (result?.audioOutput && audioRef.current) {
       audioRef.current.src = result.audioOutput;
+      audioRef.current.play();
     }
   }, [result]);
 
@@ -123,7 +122,7 @@ export default function PriceForecasting() {
               <Bot className="h-5 w-5 text-primary" />
               <AlertTitle className="text-lg text-primary">{t.voiceResponse}</AlertTitle>
               <AlertDescription>
-                {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
+                {result.audioOutput && <audio controls src={result.audioOutput} ref={audioRef} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
             </Alert>
           </div>

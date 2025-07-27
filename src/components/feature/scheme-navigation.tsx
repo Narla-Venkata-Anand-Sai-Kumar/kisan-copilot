@@ -32,13 +32,11 @@ export default function SchemeNavigation() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const audio = new Audio();
-      audioRef.current = audio;
-      audio.autoplay = true;
+      audioRef.current = new Audio();
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
-          audioRef.current.src = '';
+          audioRef.current = null;
         }
       };
     }
@@ -216,8 +214,8 @@ export default function SchemeNavigation() {
                 {result.audioOutput && (
                   <audio
                     controls
-                    autoPlay
                     src={result.audioOutput}
+                    ref={audioRef}
                     className="w-full mt-4"
                     aria-label="AI voice response"
                   />

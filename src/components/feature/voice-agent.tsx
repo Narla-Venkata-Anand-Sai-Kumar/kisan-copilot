@@ -34,18 +34,17 @@ export default function VoiceAgent() {
     if (typeof window !== 'undefined') {
       const audio = new Audio();
       audioRef.current = audio;
-      audio.autoplay = true;
       audio.onplay = () => setStatus('playing');
-      audio.onpause = () => setStatus('idle');
+      audio.onpause = () => status === 'playing' && setStatus('idle');
       audio.onended = () => setStatus('idle');
       return () => {
         if (audioRef.current) {
           audioRef.current.pause();
-          audioRef.current.src = '';
+          audioRef.current = null;
         }
       };
     }
-  }, []);
+  }, [status]);
 
   const startRecording = async () => {
     setResult(null);
@@ -88,6 +87,7 @@ export default function VoiceAgent() {
         setResult(response);
         if (audioRef.current && response.audioOutput) {
           audioRef.current.src = response.audioOutput;
+          audioRef.current.play();
         } else {
             setStatus('idle');
         }
@@ -157,8 +157,8 @@ export default function VoiceAgent() {
                   {result.audioOutput && (
                     <audio
                       controls
-                      autoPlay
                       src={result.audioOutput}
+                      ref={audioRef}
                       className="w-full mt-4"
                       aria-label="AI voice response"
                     />
