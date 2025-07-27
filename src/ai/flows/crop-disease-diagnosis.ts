@@ -71,7 +71,7 @@ const diagnosisPrompt = ai.definePrompt({
       diagnosis: z.string().describe('The diagnosis of the plant disease.'),
       remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
   })},
-  model: 'googleai/gemini-2.5-pro-vision',
+  model: 'googleai/gemini-2.5-pro',
   prompt: `You are an expert botanist specializing in diagnosing plant illnesses for farmers.
     Analyze the provided image of the plant.
     Identify the plant, diagnose any diseases or pests, and suggest clear, actionable remedies.
