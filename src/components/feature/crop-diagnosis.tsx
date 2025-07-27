@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -105,17 +106,17 @@ export default function CropDiagnosis() {
 
   return (
     <Card className="shadow-lg border-none">
-      <CardHeader>
-        <CardTitle className="text-2xl text-primary">{t.cropDiseaseDetection}</CardTitle>
-        <CardDescription>{t.uploadImageDescription}</CardDescription>
+      <CardHeader className="p-8">
+        <CardTitle className="text-3xl text-primary">{t.cropDiseaseDetection}</CardTitle>
+        <CardDescription className="text-base">{t.uploadImageDescription}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="p-4 bg-muted/50 rounded-lg">
-            <Label htmlFor="picture" className="text-base">{t.plantImage}</Label>
-            <div className="flex flex-col sm:flex-row items-center gap-2 mt-2">
-                <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} className="flex-1 bg-background" />
-                <Button onClick={handleSubmit} disabled={isLoading || !imageFile} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Upload className="mr-2 h-4 w-4" />
+      <CardContent className="space-y-6 p-8 pt-0">
+        <div className="p-6 bg-muted/50 rounded-lg">
+            <Label htmlFor="picture" className="text-lg">{t.plantImage}</Label>
+            <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
+                <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} className="flex-1 bg-background h-12 text-base" />
+                <Button onClick={handleSubmit} disabled={isLoading || !imageFile} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground h-12 px-6 text-base">
+                <Upload className="mr-2 h-5 w-5" />
                 {isLoading ? t.diagnosing : t.diagnose}
                 </Button>
             </div>
@@ -126,8 +127,8 @@ export default function CropDiagnosis() {
             <Image
               src={imagePreview}
               alt="Plant preview"
-              width={250}
-              height={250}
+              width={300}
+              height={300}
               className="rounded-lg object-contain"
               data-ai-hint="plant leaf"
             />
@@ -137,35 +138,35 @@ export default function CropDiagnosis() {
         {isLoading && <Loader />}
 
         {result && (
-          <div className="space-y-4 pt-4">
+          <div className="space-y-6 pt-4">
             <div className="flex justify-center p-4 border-2 border-dashed rounded-lg">
               <Image
                 src={imagePreview!}
                 alt="Plant preview"
-                width={250}
-                height={250}
+                width={300}
+                height={300}
                 className="rounded-lg object-contain"
                 data-ai-hint="plant leaf"
               />
            </div>
             <Alert>
-              <Sparkles className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-primary">{t.plantName}</AlertTitle>
-              <AlertDescription className="font-semibold">{result.plantName}</AlertDescription>
+              <Sparkles className="h-5 w-5 text-primary" />
+              <AlertTitle className="text-lg text-primary">{t.plantName}</AlertTitle>
+              <AlertDescription className="text-base font-semibold">{result.plantName}</AlertDescription>
             </Alert>
             <Alert>
-              <Microscope className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-primary">{t.diagnosis}</AlertTitle>
-              <AlertDescription className="font-semibold">{result.diagnosis}</AlertDescription>
+              <Microscope className="h-5 w-5 text-primary" />
+              <AlertTitle className="text-lg text-primary">{t.diagnosis}</AlertTitle>
+              <AlertDescription className="text-base font-semibold">{result.diagnosis}</AlertDescription>
             </Alert>
             <Alert>
-              <Stethoscope className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-primary">{t.remediesIn(language)}</AlertTitle>
-              <AlertDescription className="font-semibold">{result.remedies}</AlertDescription>
+              <Stethoscope className="h-5 w-5 text-primary" />
+              <AlertTitle className="text-lg text-primary">{t.remediesIn(language)}</AlertTitle>
+              <AlertDescription className="text-base font-semibold">{result.remedies}</AlertDescription>
             </Alert>
             <Alert>
-              <Bot className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-primary">{t.voiceResponse}</AlertTitle>
+              <Bot className="h-5 w-5 text-primary" />
+              <AlertTitle className="text-lg text-primary">{t.voiceResponse}</AlertTitle>
               <AlertDescription>
                 {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>

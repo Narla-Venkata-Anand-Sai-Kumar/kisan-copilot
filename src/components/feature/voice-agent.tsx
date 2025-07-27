@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -113,53 +114,52 @@ export default function VoiceAgent() {
 
  const getButtonIcon = () => {
      switch (status) {
-      case 'recording': return <Square className="h-5 w-5" />;
-      case 'processing': return <Loader2 className="h-5 w-5 animate-spin" />;
-      case 'playing': return <Bot className="h-5 w-5" />;
-      default: return <Mic className="h-5 w-5" />;
+      case 'recording': return <Square className="h-6 w-6" />;
+      case 'processing': return <Loader2 className="h-6 w-6 animate-spin" />;
+      case 'playing': return <Bot className="h-6 w-6" />;
+      default: return <Mic className="h-6 w-6" />;
     }
  }
 
   return (
     <Card className="shadow-lg border-none">
-      <CardHeader>
-        <CardTitle className="text-2xl text-primary">{t.voiceAgentIn(language)}</CardTitle>
-        <CardDescription>{t.voiceAgentDescription(language)}</CardDescription>
+      <CardHeader className="p-8">
+        <CardTitle className="text-3xl text-primary">{t.voiceAgentIn(language)}</CardTitle>
+        <CardDescription className="text-base">{t.voiceAgentDescription(language)}</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center gap-6">
+      <CardContent className="flex flex-col items-center justify-center gap-8 p-8 pt-0">
         <Button 
           onClick={status === 'recording' ? stopRecording : startRecording}
           disabled={status === 'processing' || status === 'playing'}
           variant={status === 'recording' ? 'destructive' : 'default'}
-          size="lg" 
-          className="w-full max-w-xs h-16 text-lg bg-accent hover:bg-accent/90 text-accent-foreground"
+          className="w-full max-w-md h-20 text-xl bg-accent hover:bg-accent/90 text-accent-foreground"
         >
           {getButtonIcon()}
           {getButtonText()}
         </Button>
         
         {result && (
-          <div className="w-full space-y-4 pt-4">
+          <div className="w-full space-y-6 pt-4">
               {result.transcribedText && (
                  <Alert>
-                    <User className="h-4 w-4 text-primary" />
-                    <AlertTitle className="text-primary">{t.yourQueryTranscribed}</AlertTitle>
+                    <User className="h-5 w-5 text-primary" />
+                    <AlertTitle className="text-lg text-primary">{t.yourQueryTranscribed}</AlertTitle>
                     <AlertDescription>
-                      <p className="font-semibold">{result.transcribedText}</p>
+                      <p className="text-base font-semibold">{result.transcribedText}</p>
                     </AlertDescription>
                 </Alert>
               )}
               <Alert>
-                <Sparkles className="h-4 w-4 text-primary" />
-                <AlertTitle className="text-primary">{t.aiResponse}</AlertTitle>
+                <Sparkles className="h-5 w-5 text-primary" />
+                <AlertTitle className="text-lg text-primary">{t.aiResponse}</AlertTitle>
                 <AlertDescription>
-                  <p className="whitespace-pre-wrap">{result.responseText}</p>
+                  <p className="whitespace-pre-wrap text-base">{result.responseText}</p>
                   {result.audioOutput && (
                     <audio
                       controls
                       autoPlay
                       src={result.audioOutput}
-                      className="w-full mt-2"
+                      className="w-full mt-4"
                       aria-label="AI voice response"
                     />
                   )}

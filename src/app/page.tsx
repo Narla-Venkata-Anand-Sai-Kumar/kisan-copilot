@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { Leaf, LineChart, Landmark, Mic, Languages } from 'lucide-react';
@@ -19,8 +20,8 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-card px-4 md:px-6">
-         <h1 className="text-2xl font-bold text-primary cursor-pointer">
+      <header className="sticky top-0 z-10 flex h-20 items-center justify-between gap-4 border-b bg-card px-6 md:px-8">
+         <h1 className="text-3xl font-bold text-primary cursor-pointer">
             {t.kisanCopilot}
           </h1>
         <div className="flex items-center gap-2">
@@ -39,23 +40,23 @@ export default function Home() {
               </Select>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+      <main className="flex flex-1 flex-col gap-4 p-4 sm:p-6 md:p-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
-            <TabsTrigger value="crop-diagnosis" className="flex flex-col md:flex-row items-center gap-2 py-2 text-xs md:text-sm">
-              <Leaf className="h-5 w-5" />
+            <TabsTrigger value="crop-diagnosis" className="flex flex-col md:flex-row items-center gap-2 py-3 text-sm md:text-base">
+              <Leaf className="h-6 w-6" />
               <span>{t.cropDiagnosis}</span>
             </TabsTrigger>
-            <TabsTrigger value="price-forecasting" className="flex flex-col md:flex-row items-center gap-2 py-2 text-xs md:text-sm">
-              <LineChart className="h-5 w-5" />
+            <TabsTrigger value="price-forecasting" className="flex flex-col md:flex-row items-center gap-2 py-3 text-sm md:text-base">
+              <LineChart className="h-6 w-6" />
               <span>{t.priceForecasting}</span>
             </TabsTrigger>
-            <TabsTrigger value="scheme-navigation" className="flex flex-col md:flex-row items-center gap-2 py-2 text-xs md:text-sm">
-              <Landmark className="h-5 w-5" />
+            <TabsTrigger value="scheme-navigation" className="flex flex-col md:flex-row items-center gap-2 py-3 text-sm md:text-base">
+              <Landmark className="h-6 w-6" />
               <span>{t.schemeHelp}</span>
             </TabsTrigger>
-            <TabsTrigger value="voice-agent" className="flex flex-col md:flex-row items-center gap-2 py-2 text-xs md:text-sm">
-              <Mic className="h-5 w-5" />
+            <TabsTrigger value="voice-agent" className="flex flex-col md:flex-row items-center gap-2 py-3 text-sm md:text-base">
+              <Mic className="h-6 w-6" />
               <span>{t.voiceAgent}</span>
             </TabsTrigger>
           </TabsList>
