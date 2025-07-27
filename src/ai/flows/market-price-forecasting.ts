@@ -88,9 +88,32 @@ const marketPriceForecastingFlow = ai.defineFlow(
         throw new Error(`Failed to get response from Cloud Run agent: ${response.statusText}`);
     }
     
-    // This assumes your agent returns JSON with 'forecast' and 'suggestion' fields.
-    // Adjust this based on your agent's actual response structure.
-    const forecastOutput = await response.json();
+    // The agent returns a plain text string. We will parse it and structure it.
+    const responseText = await response.text();
+    
+    let forecast = '';
+    let suggestion = '';
+
+    // A simple heuristic to split the text into forecast and suggestion
+    const suggestionKeywords = ['suggestion:', 'recommendation:', 'advice:'];
+    let splitIndex = -1;
+
+    for (const keyword of suggestionKeywords) {
+        splitIndex = responseText.toLowerCase().indexOf(keyword);
+        if (splitIndex !== -1) {
+            forecast = responseText.substring(0, splitIndex).replace('Forecast:', '').trim();
+            suggestion = responseText.substring(splitIndex).trim();
+            break;
+        }
+    }
+    
+    if (splitIndex === -1) {
+        // If no keyword is found, assume the whole text is the forecast.
+        forecast = responseText;
+        suggestion = 'No specific suggestion provided.';
+    }
+
+    const forecastOutput = { forecast, suggestion };
    
     if (!forecastOutput || !forecastOutput.forecast || !forecastOutput.suggestion) {
       throw new Error('Could not get price forecast from the external agent.');
@@ -98,7 +121,7 @@ const marketPriceForecastingFlow = ai.defineFlow(
     
     let audioOutput = '';
     try {
-      const responseText = `Forecast: ${forecastOutput.forecast}. Suggestion: ${forecastOutput.suggestion}`;
+      const ttsText = `Forecast: ${forecastOutput.forecast}. Suggestion: ${forecastOutput.suggestion}`;
 
       const { media } = await ai.generate({
         model: 'googleai/gemini-2.5-flash-preview-tts',
@@ -110,7 +133,7 @@ const marketPriceForecastingFlow = ai.defineFlow(
             },
           },
         },
-        prompt: responseText,
+        prompt: ttsText,
       });
 
       if (media?.url) {
