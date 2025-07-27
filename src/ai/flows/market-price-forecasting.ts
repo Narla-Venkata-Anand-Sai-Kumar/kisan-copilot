@@ -59,6 +59,30 @@ async function toWav(
   });
 }
 
+const friendlyResponsePrompt = ai.definePrompt({
+    name: 'friendlyPriceResponse',
+    input: { schema: z.object({
+        forecast: z.string(),
+        suggestion: z.string(),
+        language: z.string(),
+    })},
+    output: { schema: z.object({
+        forecast: z.string().describe('The market price forecast for the specified crop and location in the specified language, rephrased to be easily understandable.'),
+        suggestion: z.string().describe('A selling suggestion based on the market price forecast in the specified language, rephrased to be easily understandable.'),
+    })},
+    model: 'googleai/gemini-2.5-pro',
+    prompt: `You are an expert agricultural advisor. Your task is to take a raw market price forecast and selling suggestion and make it more understandable and friendly for a farmer.
+
+    Respond in the following language: {{{language}}}.
+
+    Original Forecast: {{{forecast}}}
+    Original Suggestion: {{{suggestion}}}
+    
+    Rephrase the forecast and suggestion to be clear, encouraging, and easy to act upon.
+    `
+});
+
+
 const marketPriceForecastingFlow = ai.defineFlow(
   {
     name: 'marketPriceForecastingFlow',
@@ -68,19 +92,13 @@ const marketPriceForecastingFlow = ai.defineFlow(
   async input => {
     console.log('Calling external Cloud Run agent for market price forecasting...');
     
-    // Construct the URL with query parameters
     const agentUrl = new URL('https://agriculture-ai-agents-534880792865.us-central1.run.app/market-price');
     agentUrl.searchParams.append('crop', input.crop);
-    agentUrl.searchParams.append('state', input.location); // Assuming 'location' maps to 'state'
-    agentUrl.searchParams.append('language', input.language);
+    agentUrl.searchParams.append('state', input.location); 
     
-    // The Cloud Run agent is called via a GET request.
-    // If your service is not public, you will need to handle authentication.
-    // The recommended way is to use an ID token from the service account running this app.
     const response = await fetch(agentUrl.toString(), {
         method: 'GET',
         headers: {
-            // 'Authorization': `Bearer YOUR_ID_TOKEN` // Add your auth token if required
         },
     });
 
@@ -88,13 +106,11 @@ const marketPriceForecastingFlow = ai.defineFlow(
         throw new Error(`Failed to get response from Cloud Run agent: ${response.statusText}`);
     }
     
-    // The agent returns a plain text string. We will parse it and structure it.
     const responseText = await response.text();
     
     let forecast = '';
     let suggestion = '';
 
-    // A simple heuristic to split the text into forecast and suggestion
     const suggestionKeywords = ['suggestion:', 'recommendation:', 'advice:'];
     let splitIndex = -1;
 
@@ -108,20 +124,23 @@ const marketPriceForecastingFlow = ai.defineFlow(
     }
     
     if (splitIndex === -1) {
-        // If no keyword is found, assume the whole text is the forecast.
         forecast = responseText;
         suggestion = 'No specific suggestion provided.';
     }
 
-    const forecastOutput = { forecast, suggestion };
-   
-    if (!forecastOutput || !forecastOutput.forecast || !forecastOutput.suggestion) {
+    const { output: friendlyOutput } = await friendlyResponsePrompt({
+        forecast,
+        suggestion,
+        language: input.language
+    });
+
+    if (!friendlyOutput || !friendlyOutput.forecast || !friendlyOutput.suggestion) {
       throw new Error('Could not get price forecast from the external agent.');
     }
     
     let audioOutput = '';
     try {
-      const ttsText = `Forecast: ${forecastOutput.forecast}. Suggestion: ${forecastOutput.suggestion}`;
+      const ttsText = `Forecast: ${friendlyOutput.forecast}. Suggestion: ${friendlyOutput.suggestion}`;
 
       const { media } = await ai.generate({
         model: 'googleai/gemini-2.5-flash-preview-tts',
@@ -148,7 +167,7 @@ const marketPriceForecastingFlow = ai.defineFlow(
     }
     
     return {
-      ...forecastOutput,
+      ...friendlyOutput,
       audioOutput,
     };
   }

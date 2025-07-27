@@ -61,6 +61,24 @@ async function toWav(
   });
 }
 
+const friendlySchemePrompt = ai.definePrompt({
+    name: 'friendlySchemeResponse',
+    input: { schema: z.object({
+        answer: z.string(),
+        language: z.string(),
+    })},
+    output: { schema: z.object({
+        answer: z.string().describe('The answer to the query about government schemes, rephrased to be easily understandable.'),
+    })},
+    model: 'googleai/gemini-2.5-pro',
+    prompt: `You are an expert government scheme advisor for farmers. Your task is to take a technical description of a government scheme and make it very simple and easy to understand for a farmer.
+
+    Explain the key benefits and how to apply in simple steps. Respond in the following language: {{{language}}}.
+
+    Original Information: {{{answer}}}
+    `
+});
+
 const navigateGovernmentSchemesFlow = ai.defineFlow(
   {
     name: 'navigateGovernmentSchemesFlow',
@@ -70,18 +88,12 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
   async input => {
     console.log('Calling external Cloud Run agent for scheme navigation...');
 
-    // Construct the URL with query parameters
     const agentUrl = new URL('https://agriculture-ai-agents-534880792865.us-central1.run.app/agri-schemes');
     agentUrl.searchParams.append('query', input.query);
-    agentUrl.searchParams.append('language', input.language);
     
-    // The Cloud Run agent is called via a GET request.
-    // If your service is not public, you will need to handle authentication.
-    // The recommended way is to use an ID token from the service account running this app.
     const response = await fetch(agentUrl.toString(), {
         method: 'GET',
         headers: {
-            // 'Authorization': `Bearer YOUR_ID_TOKEN` // Add your auth token if required
         },
     });
 
@@ -89,11 +101,14 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
         throw new Error(`Failed to get response from Cloud Run agent: ${response.statusText}`);
     }
     
-    // This assumes your agent returns a JSON object with an 'answer' field.
-    // Adjust this based on your agent's actual response structure.
-    const schemesOutput = await response.json();
+    const agentResponse = await response.json();
+
+    const { output: friendlyOutput } = await friendlySchemePrompt({
+        answer: agentResponse.answer,
+        language: input.language
+    });
     
-    if (!schemesOutput || !schemesOutput.answer) {
+    if (!friendlyOutput || !friendlyOutput.answer) {
       throw new Error('Could not get scheme information from the external agent.');
     }
 
@@ -109,7 +124,7 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
             },
           },
         },
-        prompt: schemesOutput.answer,
+        prompt: friendlyOutput.answer,
       });
 
       if (media?.url) {
@@ -124,7 +139,7 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
     }
     
     return {
-      ...schemesOutput,
+      ...friendlyOutput,
       audioOutput,
     };
   }
