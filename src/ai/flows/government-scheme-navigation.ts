@@ -70,18 +70,19 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
   async input => {
     console.log('Calling external Cloud Run agent for scheme navigation...');
 
-    const agentUrl = 'https://agriculture-ai-agents-534880792865.us-central1.run.app/agri-schemes';
-
-    // The Cloud Run agent is called via a POST request with a JSON body.
+    // Construct the URL with query parameters
+    const agentUrl = new URL('https://agriculture-ai-agents-534880792865.us-central1.run.app/agri-schemes');
+    agentUrl.searchParams.append('query', input.query);
+    agentUrl.searchParams.append('language', input.language);
+    
+    // The Cloud Run agent is called via a GET request.
     // If your service is not public, you will need to handle authentication.
     // The recommended way is to use an ID token from the service account running this app.
-    const response = await fetch(agentUrl, {
-        method: 'POST',
+    const response = await fetch(agentUrl.toString(), {
+        method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
             // 'Authorization': `Bearer YOUR_ID_TOKEN` // Add your auth token if required
         },
-        body: JSON.stringify({ "query": input.query, "language": input.language })
     });
 
     if (!response.ok) {

@@ -67,19 +67,21 @@ const marketPriceForecastingFlow = ai.defineFlow(
   },
   async input => {
     console.log('Calling external Cloud Run agent for market price forecasting...');
-
-    const agentUrl = 'https://agriculture-ai-agents-534880792865.us-central1.run.app/market-price';
     
-    // The Cloud Run agent is called via a POST request with a JSON body.
+    // Construct the URL with query parameters
+    const agentUrl = new URL('https://agriculture-ai-agents-534880792865.us-central1.run.app/market-price');
+    agentUrl.searchParams.append('crop', input.crop);
+    agentUrl.searchParams.append('state', input.location); // Assuming 'location' maps to 'state'
+    agentUrl.searchParams.append('language', input.language);
+    
+    // The Cloud Run agent is called via a GET request.
     // If your service is not public, you will need to handle authentication.
     // The recommended way is to use an ID token from the service account running this app.
-    const response = await fetch(agentUrl, {
-        method: 'POST',
+    const response = await fetch(agentUrl.toString(), {
+        method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
             // 'Authorization': `Bearer YOUR_ID_TOKEN` // Add your auth token if required
         },
-        body: JSON.stringify({ "crop": input.crop, "state": input.location, "language": input.language })
     });
 
     if (!response.ok) {
