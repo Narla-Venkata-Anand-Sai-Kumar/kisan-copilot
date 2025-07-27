@@ -3,7 +3,7 @@
 /**
  * @fileOverview Voice-First AI for farmer interaction in a specified language.
  *
- * - voiceFirstInteraction - A function that handles voice input, STT, LLM processing, and TTS output.
+ * - voiceFirstInteraction - A function that handles voice input, STT, agent processing, and TTS output.
  * - VoiceFirstInteractionInput - The input type for the voiceFirstInteraction function.
  * - VoiceFirstInteractionOutput - The return type for the voiceFirstInteraction function.
  */
@@ -60,6 +60,24 @@ async function toWav(
   });
 }
 
+const friendlyResponsePrompt = ai.definePrompt({
+    name: 'friendlyVoiceResponse',
+    input: { schema: z.object({
+        answer: z.string(),
+        language: z.string(),
+    })},
+    output: { schema: z.object({
+        answer: z.string().describe('The answer to the query, rephrased to be easily understandable for a farmer.'),
+    })},
+    model: 'googleai/gemini-2.5-pro',
+    prompt: `You are a helpful AI assistant for farmers. Your task is to take a potentially technical or brief answer and make it simple, friendly, and easy to understand.
+
+    Respond in the following language: {{{language}}}.
+
+    Original Answer: {{{answer}}}
+    `
+});
+
 const voiceFirstInteractionFlow = ai.defineFlow(
   {
     name: 'voiceFirstInteractionFlow',
@@ -103,7 +121,7 @@ const voiceFirstInteractionFlow = ai.defineFlow(
           audioOutput = 'data:audio/wav;base64,' + (await toWav(audioBuffer));
         }
       } catch(e) {
-        console.error('TTS generation failed, likely due to quota. Returning text only.', e);
+        console.error('TTS generation for error failed, likely due to quota. Returning text only.', e);
       }
 
       return {
@@ -113,11 +131,30 @@ const voiceFirstInteractionFlow = ai.defineFlow(
       };
     }
     
-    const llmResult = await ai.generate({
-      prompt: `You are a helpful assistant for farmers. The user said: "${transcribedText}". Provide a helpful response in ${input.language}.`
+    // Call the external agent
+    console.log('Calling external Cloud Run agent for info query...');
+    
+    const agentUrl = new URL('https://agriculture-ai-agents-534880792865.us-central1.run.app/info-query');
+    agentUrl.searchParams.append('query', transcribedText); 
+    
+    const response = await fetch(agentUrl.toString(), {
+        method: 'GET',
+        headers: {},
     });
 
-    const responseText = llmResult.text
+    if (!response.ok) {
+        throw new Error(`Failed to get response from Cloud Run agent: ${response.statusText}`);
+    }
+    
+    const agentResponseText = await response.text();
+
+    // Make the response friendly
+    const { output: friendlyOutput } = await friendlyResponsePrompt({
+        answer: agentResponseText,
+        language: input.language
+    });
+
+    const responseText = friendlyOutput?.answer || "Sorry, I couldn't process the response.";
 
     let audioOutput = '';
     try {
