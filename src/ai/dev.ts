@@ -6,3 +6,4 @@ import '@/ai/flows/government-scheme-navigation.ts';
 import '@/ai/flows/voice-first-interaction.ts';
 import '@/ai/flows/crop-disease-diagnosis.ts';
 import '@/ai/flows/transcribe-scheme-query.ts';
+import '@/ai/flows/crop-advisory-calendar.ts';

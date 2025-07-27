@@ -1,7 +1,7 @@
 
 'use client';
 import { useState } from 'react';
-import { Leaf, LineChart, Landmark, Mic, Languages } from 'lucide-react';
+import { Leaf, LineChart, Landmark, Mic, Languages, CalendarDays } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { translations } from '@/lib/i18n';
 
@@ -10,6 +10,7 @@ import CropDiagnosis from '@/components/feature/crop-diagnosis';
 import PriceForecasting from '@/components/feature/price-forecasting';
 import SchemeNavigation from '@/components/feature/scheme-navigation';
 import VoiceAgent from '@/components/feature/voice-agent';
+import CropAdvisory from '@/components/feature/crop-advisory';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Home() {
@@ -42,10 +43,14 @@ export default function Home() {
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:p-6 md:p-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
             <TabsTrigger value="crop-diagnosis" className="flex flex-col md:flex-row items-center gap-2 py-3 text-sm md:text-base">
               <Leaf className="h-6 w-6" />
               <span>{t.cropDiagnosis}</span>
+            </TabsTrigger>
+             <TabsTrigger value="crop-advisory" className="flex flex-col md:flex-row items-center gap-2 py-3 text-sm md:text-base">
+              <CalendarDays className="h-6 w-6" />
+              <span>{t.cropAdvisory}</span>
             </TabsTrigger>
             <TabsTrigger value="price-forecasting" className="flex flex-col md:flex-row items-center gap-2 py-3 text-sm md:text-base">
               <LineChart className="h-6 w-6" />
@@ -62,6 +67,9 @@ export default function Home() {
           </TabsList>
           <TabsContent value="crop-diagnosis">
             <CropDiagnosis />
+          </TabsContent>
+          <TabsContent value="crop-advisory">
+            <CropAdvisory />
           </TabsContent>
           <TabsContent value="price-forecasting">
             <PriceForecasting />
