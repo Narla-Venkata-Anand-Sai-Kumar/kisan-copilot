@@ -1,6 +1,6 @@
 export const translations: Record<string, any> = {
   English: {
-    kisanCopilot: 'Kisan Copilot',
+    kisanCopilot: 'GreenPulse',
     cropDiagnosis: 'Crop Diagnosis',
     priceForecasting: 'Price Forecasting',
     schemeHelp: 'Scheme Help',
@@ -60,7 +60,7 @@ export const translations: Record<string, any> = {
     failedToProcessVoice: 'Failed to process voice command. Please try again.',
   },
   Kannada: {
-    kisanCopilot: 'ಕಿಸಾನ್ ಕೋಪೈಲಟ್',
+    kisanCopilot: 'ಗ್ರೀನ್‌ಪಲ್ಸ್',
     cropDiagnosis: 'ಬೆಳೆ ರೋಗನಿರ್ಣಯ',
     priceForecasting: 'ಬೆಲೆ ಮುನ್ಸೂಚನೆ',
     schemeHelp: 'ಯೋಜನೆ ಸಹಾಯ',
@@ -120,7 +120,7 @@ export const translations: Record<string, any> = {
     failedToProcessVoice: 'ಧ್ವನಿ ಆಜ್ಞೆಯನ್ನು ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
   },
   Hindi: {
-    kisanCopilot: 'किसान कोपायलट',
+    kisanCopilot: 'ग्रीनपल्स',
     cropDiagnosis: 'फसल निदान',
     priceForecasting: 'मूल्य पूर्वानुमान',
     schemeHelp: 'योजना सहायता',
@@ -180,7 +180,7 @@ export const translations: Record<string, any> = {
     failedToProcessVoice: 'वॉयस कमांड को प्रोसेस करने में विफल। कृपया फिर से प्रयास करें।',
   },
   Tamil: {
-    kisanCopilot: 'கிசான் கோபைலட்',
+    kisanCopilot: 'கிரீன்பல்ஸ்',
     cropDiagnosis: 'பயிர் கண்டறிதல்',
     priceForecasting: 'விலை முன்னறிவிப்பு',
     schemeHelp: 'திட்ட உதவி',
@@ -240,7 +240,7 @@ export const translations: Record<string, any> = {
     failedToProcessVoice: 'குரல் கட்டளையைச் செயல்படுத்த முடியவில்லை. மீண்டும் முயலவும்.',
   },
   Telugu: {
-    kisanCopilot: 'కిసాన్ కోపైలట్',
+    kisanCopilot: 'గ్రీన్‌పల్స్',
     cropDiagnosis: 'పంట నిర్ధారణ',
     priceForecasting: 'ధరల అంచనా',
     schemeHelp: 'పథకం సహాయం',
