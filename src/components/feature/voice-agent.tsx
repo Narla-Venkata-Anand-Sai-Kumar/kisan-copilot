@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Bot, Loader2 } from 'lucide-react';
+import { Mic, Square, Bot, Loader2, User, Sparkles } from 'lucide-react';
 import { voiceFirstInteraction } from '@/ai/flows/voice-first-interaction';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/context/language-context';
 import { translations } from '@/lib/i18n';
-import { cn } from '@/lib/utils';
-import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type Status = 'idle' | 'recording' | 'processing' | 'playing';
 
@@ -18,13 +17,10 @@ interface InteractionResult {
   responseText: string;
   audioOutput: string;
 }
-interface VoiceAgentProps {
-  className?: string;
-}
 
-export default function VoiceAgent({ className }: VoiceAgentProps) {
+export default function VoiceAgent() {
   const [status, setStatus] = useState<Status>('idle');
-  const [setResult] = useState<InteractionResult | null>(null);
+  const [result, setResult] = useState<InteractionResult | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -106,50 +102,71 @@ export default function VoiceAgent({ className }: VoiceAgentProps) {
     };
   };
 
- const renderButton = () => {
+ const getButtonText = () => {
     switch (status) {
-      case 'recording':
-        return (
-          <Button onClick={stopRecording} variant="destructive" size="lg" className="w-full">
-            <Square className="mr-2 h-5 w-5" /> {t.stopRecording}
-          </Button>
-        );
-      case 'processing':
-        return (
-          <Button disabled size="lg" className="w-full bg-accent hover:bg-accent text-accent-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t.processing}
-          </Button>
-        );
-      case 'playing':
-        return (
-          <Button disabled size="lg" className="w-full bg-accent hover:bg-accent text-accent-foreground">
-            <Bot className="mr-2 h-5 w-5" /> {t.playing}
-          </Button>
-        );
-      case 'idle':
-      default:
-        return (
-          <Button onClick={startRecording} size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-            <Mic className="mr-2 h-5 w-5" /> {t.startListening}
-          </Button>
-        );
+      case 'recording': return t.stopRecording;
+      case 'processing': return t.processing;
+      case 'playing': return t.playing;
+      default: return t.startListening;
     }
-  };
+  }
+
+ const getButtonIcon = () => {
+     switch (status) {
+      case 'recording': return <Square className="h-5 w-5" />;
+      case 'processing': return <Loader2 className="h-5 w-5 animate-spin" />;
+      case 'playing': return <Bot className="h-5 w-5" />;
+      default: return <Mic className="h-5 w-5" />;
+    }
+ }
 
   return (
-    <Card className={cn("shadow-xl border-none w-full max-w-sm", className)}>
-      <CardContent className="flex flex-col items-center justify-center gap-4 p-4">
-        <div className="text-left w-full">
-          <Label className="text-muted-foreground">{`${t.languageLabel}: ${language}`}</Label>
-        </div>
-        {renderButton()}
+    <Card className="shadow-lg border-none">
+      <CardHeader>
+        <CardTitle className="text-2xl text-primary">{t.voiceAgentIn(language)}</CardTitle>
+        <CardDescription>{t.voiceAgentDescription(language)}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center justify-center gap-6">
+        <Button 
+          onClick={status === 'recording' ? stopRecording : startRecording}
+          disabled={status === 'processing' || status === 'playing'}
+          variant={status === 'recording' ? 'destructive' : 'default'}
+          size="lg" 
+          className="w-full max-w-xs h-16 text-lg bg-accent hover:bg-accent/90 text-accent-foreground"
+        >
+          {getButtonIcon()}
+          {getButtonText()}
+        </Button>
         
-        <button onClick={status === 'recording' ? stopRecording : startRecording} className={cn('h-16 w-16 rounded-full flex items-center justify-center transition-all duration-300 text-foreground',
-           status === 'recording' ? 'bg-red-500/20' : 'bg-muted'
-        )}>
-            <Mic className="h-8 w-8" />
-        </button>
-
+        {result && (
+          <div className="w-full space-y-4 pt-4">
+              {result.transcribedText && (
+                 <Alert>
+                    <User className="h-4 w-4 text-primary" />
+                    <AlertTitle className="text-primary">{t.yourQueryTranscribed}</AlertTitle>
+                    <AlertDescription>
+                      <p className="font-semibold">{result.transcribedText}</p>
+                    </AlertDescription>
+                </Alert>
+              )}
+              <Alert>
+                <Sparkles className="h-4 w-4 text-primary" />
+                <AlertTitle className="text-primary">{t.aiResponse}</AlertTitle>
+                <AlertDescription>
+                  <p className="whitespace-pre-wrap">{result.responseText}</p>
+                  {result.audioOutput && (
+                    <audio
+                      controls
+                      autoPlay
+                      src={result.audioOutput}
+                      className="w-full mt-2"
+                      aria-label="AI voice response"
+                    />
+                  )}
+                </AlertDescription>
+              </Alert>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
