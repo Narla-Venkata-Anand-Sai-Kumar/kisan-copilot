@@ -94,7 +94,6 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
         const response = await transcribeSchemeQuery({ audioDataUri, language });
         const transcribedText = response.transcribedText;
         setQuery(transcribedText);
-        // Automatically trigger the search after transcription
         await handleSearch(transcribedText);
       } catch (error) {
         console.error('Error with voice interaction:', error);
@@ -160,15 +159,15 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
   }
 
   return (
-    <Card className="shadow-lg">
+    <Card className="shadow-lg border-none">
       <CardHeader>
-        <CardTitle>{t.governmentSchemeNavigator}</CardTitle>
+        <CardTitle className="text-2xl text-primary">{t.governmentSchemeNavigator}</CardTitle>
         <CardDescription>{t.schemeNavigatorDescription}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleTextSubmit} className="space-y-4">
+        <form onSubmit={handleTextSubmit} className="space-y-4 p-4 bg-muted/50 rounded-lg">
           <div className="space-y-1.5">
-            <Label htmlFor="query">{t.yourQuestion}</Label>
+            <Label htmlFor="query" className="text-base">{t.yourQuestion}</Label>
             <Textarea
               id="query"
               placeholder={t.schemePlaceholder}
@@ -176,10 +175,11 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
               onChange={(e) => setQuery(e.target.value)}
               rows={4}
               disabled={isLoading}
+              className="bg-background"
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button type="submit" disabled={isLoading || !query} className="w-full sm:w-auto">
+            <Button type="submit" disabled={isLoading || !query} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
               <HelpCircle className="mr-2 h-4 w-4" />
               {status === 'processing-text' ? t.searching : t.askQuestion}
             </Button>
@@ -202,16 +202,16 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
           <div className="pt-6 space-y-4">
             {submittedQuery && (
                <Alert>
-                  <User className="h-4 w-4" />
-                  <AlertTitle>{t.yourQuery}</AlertTitle>
+                  <User className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary">{t.yourQuery}</AlertTitle>
                   <AlertDescription>
                     <p className="font-semibold">{submittedQuery}</p>
                   </AlertDescription>
               </Alert>
             )}
             <Alert>
-              <Bot className="h-4 w-4" />
-              <AlertTitle>{t.answerIn(language)}</AlertTitle>
+              <Bot className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-primary">{t.answerIn(language)}</AlertTitle>
               <AlertDescription>
                 <p className="whitespace-pre-wrap">{result.answer}</p>
                 {result.audioOutput && (

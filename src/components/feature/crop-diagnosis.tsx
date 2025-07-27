@@ -106,21 +106,21 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
   };
 
   return (
-    <Card className="shadow-lg">
+    <Card className="shadow-lg border-none">
       <CardHeader>
-        <CardTitle>{t.cropDiseaseDetection}</CardTitle>
+        <CardTitle className="text-2xl text-primary">{t.cropDiseaseDetection}</CardTitle>
         <CardDescription>{t.uploadImageDescription}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="picture">{t.plantImage}</Label>
-          <div className="flex flex-col sm:flex-row items-center gap-2">
-            <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} className="flex-1" />
-            <Button onClick={handleSubmit} disabled={isLoading || !imageFile} className="w-full sm:w-auto">
-              <Upload className="mr-2 h-4 w-4" />
-              {isLoading ? t.diagnosing : t.diagnose}
-            </Button>
-          </div>
+        <div className="p-4 bg-muted/50 rounded-lg">
+            <Label htmlFor="picture" className="text-base">{t.plantImage}</Label>
+            <div className="flex flex-col sm:flex-row items-center gap-2 mt-2">
+                <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} className="flex-1 bg-background" />
+                <Button onClick={handleSubmit} disabled={isLoading || !imageFile} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
+                <Upload className="mr-2 h-4 w-4" />
+                {isLoading ? t.diagnosing : t.diagnose}
+                </Button>
+            </div>
         </div>
 
         {imagePreview && !isLoading && !result && (
@@ -151,23 +151,23 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
               />
            </div>
             <Alert>
-              <Sparkles className="h-4 w-4" />
-              <AlertTitle>{t.plantName}</AlertTitle>
+              <Sparkles className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-primary">{t.plantName}</AlertTitle>
               <AlertDescription className="font-semibold">{result.plantName}</AlertDescription>
             </Alert>
             <Alert>
-              <Microscope className="h-4 w-4" />
-              <AlertTitle>{t.diagnosis}</AlertTitle>
+              <Microscope className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-primary">{t.diagnosis}</AlertTitle>
               <AlertDescription className="font-semibold">{result.diagnosis}</AlertDescription>
             </Alert>
             <Alert>
-              <Stethoscope className="h-4 w-4" />
-              <AlertTitle>{t.remediesIn(language)}</AlertTitle>
+              <Stethoscope className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-primary">{t.remediesIn(language)}</AlertTitle>
               <AlertDescription className="font-semibold">{result.remedies}</AlertDescription>
             </Alert>
             <Alert>
-              <Bot className="h-4 w-4" />
-              <AlertTitle>{t.voiceResponse}</AlertTitle>
+              <Bot className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-primary">{t.voiceResponse}</AlertTitle>
               <AlertDescription>
                 {result.audioOutput && <audio controls autoPlay src={result.audioOutput} className="w-full mt-2" aria-label="AI voice response" />}
               </AlertDescription>
