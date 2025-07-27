@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Bot, Loader2, User, Sparkles, Languages } from 'lucide-react';
+import { Mic, Square, Bot, Loader2 } from 'lucide-react';
 import { voiceFirstInteraction } from '@/ai/flows/voice-first-interaction';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useLanguage } from '@/context/language-context';
 import { translations } from '@/lib/i18n';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 
@@ -20,17 +19,17 @@ interface InteractionResult {
   audioOutput: string;
 }
 interface VoiceAgentProps {
-  language: string;
   className?: string;
 }
 
-export default function VoiceAgent({ language, className }: VoiceAgentProps) {
+export default function VoiceAgent({ className }: VoiceAgentProps) {
   const [status, setStatus] = useState<Status>('idle');
-  const [result, setResult] = useState<InteractionResult | null>(null);
+  const [setResult] = useState<InteractionResult | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const t = translations[language];
 
@@ -141,7 +140,7 @@ export default function VoiceAgent({ language, className }: VoiceAgentProps) {
     <Card className={cn("shadow-xl border-none w-full max-w-sm", className)}>
       <CardContent className="flex flex-col items-center justify-center gap-4 p-4">
         <div className="text-left w-full">
-          <Label className="text-muted-foreground">{`Language: ${language}`}</Label>
+          <Label className="text-muted-foreground">{`${t.languageLabel}: ${language}`}</Label>
         </div>
         {renderButton()}
         

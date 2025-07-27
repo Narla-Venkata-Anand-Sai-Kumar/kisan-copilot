@@ -11,19 +11,17 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader } from '@/components/ui/loader';
+import { useLanguage } from '@/context/language-context';
 import { translations } from '@/lib/i18n';
 
-interface CropDiagnosisProps {
-  language: string;
-}
-
-export default function CropDiagnosis({ language }: CropDiagnosisProps) {
+export default function CropDiagnosis() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [result, setResult] = useState<{ plantName: string; diagnosis: string; remedies: string; audioOutput: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { language } = useLanguage();
 
   const t = translations[language];
 

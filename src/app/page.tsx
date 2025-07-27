@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { Leaf, LineChart, Landmark, Mic, Languages, BarChart } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
+import { translations } from '@/lib/i18n';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CropDiagnosis from '@/components/feature/crop-diagnosis';
@@ -8,7 +10,6 @@ import PriceForecasting from '@/components/feature/price-forecasting';
 import SchemeNavigation from '@/components/feature/scheme-navigation';
 import VoiceAgent from '@/components/feature/voice-agent';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { translations } from '@/lib/i18n';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 function FeatureCard({ icon, title, description, value, onSelect }) {
@@ -30,7 +31,7 @@ function FeatureCard({ icon, title, description, value, onSelect }) {
 
 
 export default function Home() {
-  const [language, setLanguage] = useState('English');
+  const { language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState('home');
 
   const t = translations[language];
@@ -79,13 +80,13 @@ export default function Home() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="crop-diagnosis">
-              <CropDiagnosis language={language} />
+              <CropDiagnosis />
             </TabsContent>
             <TabsContent value="price-forecasting">
-              <PriceForecasting language={language} />
+              <PriceForecasting />
             </TabsContent>
             <TabsContent value="scheme-navigation">
-              <SchemeNavigation language={language} />
+              <SchemeNavigation />
             </TabsContent>
             <TabsContent value="farm-analytics">
                <Card>
@@ -99,7 +100,7 @@ export default function Home() {
               </Card>
             </TabsContent>
              <TabsContent value="voice-agent">
-                <VoiceAgent language={language} />
+                <VoiceAgent />
             </TabsContent>
           </Tabs>
         </main>
@@ -111,51 +112,51 @@ export default function Home() {
       <div className="flex flex-col min-h-screen bg-background">
           <main className="flex-1 flex flex-col items-center justify-center p-4 text-center">
               <h1 className="text-5xl font-bold text-primary">
-                  Welcome to GreenPulse
+                  {t.welcomeToGreenPulse}
               </h1>
               <p className="mt-2 text-xl text-primary/80">
-                  Your AI-Powered Farm Assistant
+                  {t.aiPoweredFarmAssistant}
               </p>
 
               <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
                   <FeatureCard 
                       icon={<Leaf className="h-6 w-6 text-accent" />}
-                      title="Crop Disease Detection"
-                      description='Say "Show my crops" or "Check disease"'
+                      title={t.cropDiseaseDetection}
+                      description={t.cropDiseaseDescription}
                       value="crop-diagnosis"
                       onSelect={setActiveTab}
                   />
                   <FeatureCard 
                       icon={<LineChart className="h-6 w-6 text-accent" />}
-                      title="Market Prices"
-                      description='Say "Market prices" or "Should I sell?"'
+                      title={t.marketPrices}
+                      description={t.marketPricesDescription}
                       value="price-forecasting"
                       onSelect={setActiveTab}
                   />
                   <FeatureCard 
                       icon={<Landmark className="h-6 w-6 text-accent" />}
-                      title="Government Schemes"
-                      description='Say "Government schemes" or "Help with subsidies"'
+                      title={t.governmentSchemes}
+                      description={t.governmentSchemesDescription}
                       value="scheme-navigation"
                       onSelect={setActiveTab}
                   />
                   <FeatureCard 
                       icon={<BarChart className="h-6 w-6 text-accent" />}
-                      title="Farm Analytics"
-                      description='Say "Show analytics" or "Farm performance"'
+                      title={t.farmAnalytics}
+                      description={t.farmAnalyticsDescription}
                       value="farm-analytics"
                       onSelect={setActiveTab}
                   />
               </div>
               <div className="mt-8 text-center">
-                  <p className="text-muted-foreground flex items-center gap-2">
-                    <Mic className="h-4 w-4" /> Just speak naturally to interact with any feature
+                  <p className="text-muted-foreground flex items-center justify-center gap-2">
+                    <Mic className="h-4 w-4" /> {t.speakNaturally}
                   </p>
               </div>
           </main>
           
           <div className="fixed bottom-4 right-4">
-              <VoiceAgent language={language} />
+              <VoiceAgent />
           </div>
           
            <div className="fixed top-4 right-4">

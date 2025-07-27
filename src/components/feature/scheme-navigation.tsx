@@ -10,16 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useLanguage } from '@/context/language-context';
 import { translations } from '@/lib/i18n';
 import { Loader } from '@/components/ui/loader';
 
 type Status = 'idle' | 'recording' | 'processing-audio' | 'processing-text';
 
-interface SchemeNavigationProps {
-  language: string;
-}
-
-export default function SchemeNavigation({ language }: SchemeNavigationProps) {
+export default function SchemeNavigation() {
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [result, setResult] = useState<{ answer: string; audioOutput: string } | null>(null);
@@ -28,6 +25,7 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const { language } = useLanguage();
 
   const t = translations[language];
 

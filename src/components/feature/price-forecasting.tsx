@@ -10,19 +10,17 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader } from '@/components/ui/loader';
+import { useLanguage } from '@/context/language-context';
 import { translations } from '@/lib/i18n';
 
-interface PriceForecastingProps {
-  language: string;
-}
-
-export default function PriceForecasting({ language }: PriceForecastingProps) {
+export default function PriceForecasting() {
   const [crop, setCrop] = useState('');
   const [location, setLocation] = useState('');
   const [result, setResult] = useState<{ forecast: string; suggestion: string; audioOutput: string; } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { language } = useLanguage();
 
   const t = translations[language];
 
