@@ -3,8 +3,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Upload, Microscope, Stethoscope, Bot, Sparkles } from 'lucide-react';
-import { diagnoseCropDisease } from '@/ai/flows/crop-disease-diagnosis';
+import { Upload, Microscope, Stethoscope, Bot, Sparkles, FlaskConical } from 'lucide-react';
+import { diagnoseCropDisease, DiagnoseCropDiseaseOutput } from '@/ai/flows/crop-disease-diagnosis';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,11 +14,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader } from '@/components/ui/loader';
 import { useLanguage } from '@/context/language-context';
 import { translations } from '@/lib/i18n';
+import { Badge } from '@/components/ui/badge';
 
 export default function CropDiagnosis() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [result, setResult] = useState<{ plantName: string; diagnosis: string; remedies: string; audioOutput: string; } | null>(null);
+  const [result, setResult] = useState<DiagnoseCropDiseaseOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -164,6 +165,29 @@ export default function CropDiagnosis() {
               <AlertTitle className="text-lg text-primary">{t.remediesIn(language)}</AlertTitle>
               <AlertDescription className="text-base font-semibold">{result.remedies}</AlertDescription>
             </Alert>
+             {result.productSuggestions && result.productSuggestions.length > 0 && (
+                <Alert>
+                    <FlaskConical className="h-5 w-5 text-primary" />
+                    <AlertTitle className="text-lg text-primary">Recommended Products</AlertTitle>
+                    <AlertDescription>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                            {result.productSuggestions.map((product, index) => (
+                                <Card key={index} className="bg-background/50">
+                                    <CardHeader className="p-4">
+                                        <CardTitle className="text-base flex justify-between items-center">
+                                            {product.name}
+                                            <Badge variant="secondary">{product.type}</Badge>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0 text-sm">
+                                        <p>{product.description}</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </AlertDescription>
+                </Alert>
+            )}
             <Alert>
               <Bot className="h-5 w-5 text-primary" />
               <AlertTitle className="text-lg text-primary">{t.voiceResponse}</AlertTitle>

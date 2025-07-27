@@ -22,10 +22,17 @@ const DiagnoseCropDiseaseInputSchema = z.object({
 });
 export type DiagnoseCropDiseaseInput = z.infer<typeof DiagnoseCropDiseaseInputSchema>;
 
+const ProductSuggestionSchema = z.object({
+    name: z.string().describe("The commercial name of the suggested product."),
+    type: z.enum(["Fungicide", "Insecticide", "Fertilizer", "Organic", "Other"]).describe("The type of product."),
+    description: z.string().describe("A brief description of why this product is recommended.")
+});
+
 const DiagnoseCropDiseaseOutputSchema = z.object({
   plantName: z.string().describe('The common name of the identified plant.'),
   diagnosis: z.string().describe('The diagnosis of the plant disease.'),
   remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
+  productSuggestions: z.array(ProductSuggestionSchema).describe("A list of recommended commercial products to treat the disease."),
   audioOutput: z.string().describe('Audio output in WAV format as a data URI.'),
 });
 export type DiagnoseCropDiseaseOutput = z.infer<typeof DiagnoseCropDiseaseOutputSchema>;
@@ -70,12 +77,17 @@ const diagnosisPrompt = ai.definePrompt({
       plantName: z.string().describe('The common name of the identified plant.'),
       diagnosis: z.string().describe('The diagnosis of the plant disease.'),
       remedies: z.string().describe('Suggested remedies for the plant disease in the specified language.'),
+      productSuggestions: z.array(ProductSuggestionSchema).describe("A list of 2-3 recommended commercial products (insecticides or fungicides) to treat the disease."),
   })},
   model: 'googleai/gemini-2.5-pro',
   prompt: `You are an expert botanist specializing in diagnosing plant illnesses for farmers.
     Analyze the provided image of the plant.
-    Identify the plant, diagnose any diseases or pests, and suggest clear, actionable remedies.
-    Provide the response in the following language: {{{language}}}.
+    1. Identify the plant.
+    2. Diagnose any diseases or pests.
+    3. Suggest clear, actionable remedies. This should include what the farmer should do.
+    4. Recommend 2-3 specific, commercially available products (like insecticides or fungicides) that can be used. For each product, provide its name, type, and a brief description.
+    
+    Provide the entire response in the following language: {{{language}}}.
 
     Image: {{media url=photoDataUri}}
     `,
@@ -97,7 +109,8 @@ const diagnoseCropDiseaseFlow = ai.defineFlow(
 
     let audioOutput = '';
     try {
-      const responseText = `Plant: ${diagnosisOutput.plantName}. Diagnosis: ${diagnosisOutput.diagnosis}. Remedies: ${diagnosisOutput.remedies}`;
+      const suggestedProductsText = diagnosisOutput.productSuggestions.map(p => p.name).join(', ');
+      const responseText = `Plant: ${diagnosisOutput.plantName}. Diagnosis: ${diagnosisOutput.diagnosis}. Remedies: ${diagnosisOutput.remedies}. Recommended products include: ${suggestedProductsText}`;
 
       const { media } = await ai.generate({
         model: 'googleai/gemini-2.5-flash-preview-tts',
@@ -125,6 +138,7 @@ const diagnoseCropDiseaseFlow = ai.defineFlow(
     
     return {
       ...diagnosisOutput,
+      productSuggestions: diagnosisOutput.productSuggestions || [],
       audioOutput,
     };
   }
