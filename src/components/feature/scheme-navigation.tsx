@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { HelpCircle, Bot, Mic, Square, Loader2, User } from 'lucide-react';
+import { HelpCircle, Bot, Mic, Square, User } from 'lucide-react';
 import { navigateGovernmentSchemes } from '@/ai/flows/government-scheme-navigation';
 import { transcribeSchemeQuery } from '@/ai/flows/transcribe-scheme-query';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { translations } from '@/lib/i18n';
+import { Loader } from '@/components/ui/loader';
 
 type Status = 'idle' | 'recording' | 'processing-audio' | 'processing-text';
 
@@ -147,6 +148,17 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
 
   const isLoading = status === 'processing-audio' || status === 'processing-text';
 
+  const getButtonText = () => {
+    switch (status) {
+      case 'processing-audio':
+        return t.processing;
+      case 'processing-text':
+        return t.searching;
+      default:
+        return t.askWithVoice;
+    }
+  }
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -178,20 +190,13 @@ export default function SchemeNavigation({ language }: SchemeNavigationProps) {
             ) : (
               <Button onClick={startRecording} disabled={isLoading} variant="outline" type="button" className="w-full sm:w-auto">
                 <Mic className="mr-2 h-4 w-4" />
-                {status === 'processing-audio' ? t.processing : t.askWithVoice}
+                {getButtonText()}
               </Button>
             )}
           </div>
         </form>
 
-        {isLoading && (
-          <div className="flex items-center gap-2 pt-6">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span>
-              {status === 'processing-audio' ? t.transcribing : t.searching}
-            </span>
-          </div>
-        )}
+        {isLoading && <Loader />}
 
         {result && (
           <div className="pt-6 space-y-4">

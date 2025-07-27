@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loader } from '@/components/ui/loader';
 import { translations } from '@/lib/i18n';
 
 interface CropDiagnosisProps {
@@ -123,7 +123,7 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
           </div>
         </div>
 
-        {imagePreview && (
+        {imagePreview && !isLoading && !result && (
           <div className="mt-4 flex justify-center p-4 border-2 border-dashed rounded-lg">
             <Image
               src={imagePreview}
@@ -136,23 +136,20 @@ export default function CropDiagnosis({ language }: CropDiagnosisProps) {
           </div>
         )}
 
-        {isLoading && (
-          <div className="space-y-4 pt-4">
-             <div className="space-y-2">
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-5 w-5/6" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-5 w-5/6" />
-            </div>
-          </div>
-        )}
+        {isLoading && <Loader />}
 
         {result && (
           <div className="space-y-4 pt-4">
+            <div className="flex justify-center p-4 border-2 border-dashed rounded-lg">
+              <Image
+                src={imagePreview!}
+                alt="Plant preview"
+                width={250}
+                height={250}
+                className="rounded-lg object-contain"
+                data-ai-hint="plant leaf"
+              />
+           </div>
             <Alert>
               <Sparkles className="h-4 w-4" />
               <AlertTitle>{t.plantName}</AlertTitle>

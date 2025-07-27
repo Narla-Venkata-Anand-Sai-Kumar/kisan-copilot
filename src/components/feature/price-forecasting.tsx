@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loader } from '@/components/ui/loader';
 import { translations } from '@/lib/i18n';
 
 interface PriceForecastingProps {
@@ -108,18 +108,7 @@ export default function PriceForecasting({ language }: PriceForecastingProps) {
           </Button>
         </form>
 
-        {isLoading && (
-          <div className="space-y-4 pt-6">
-             <div className="space-y-2">
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-5 w-full" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-5 w-full" />
-            </div>
-          </div>
-        )}
+        {isLoading && <Loader />}
 
         {result && (
           <div className="space-y-4 pt-6">
