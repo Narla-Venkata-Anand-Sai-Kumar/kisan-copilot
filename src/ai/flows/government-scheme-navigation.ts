@@ -11,7 +11,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import wav from 'wav';
-import { searchGovernmentSchemes } from '@/services/scheme-search-service';
 
 const NavigateGovernmentSchemesInputSchema = z.object({
   query: z.string().describe('The query about government schemes.'),
@@ -87,17 +86,29 @@ const navigateGovernmentSchemesFlow = ai.defineFlow(
     outputSchema: NavigateGovernmentSchemesOutputSchema,
   },
   async input => {
-    console.log('Calling internal service for scheme navigation...');
+    console.log('Calling external Cloud Run agent for scheme navigation...');
+    
+    const agentUrl = new URL('https://agriculture-ai-agents-534880792865.us-central1.run.app/info-query');
+    agentUrl.searchParams.append('query', input.query); 
+    
+    const response = await fetch(agentUrl.toString(), {
+        method: 'GET',
+        headers: {},
+    });
 
-    const agentResponse = await searchGovernmentSchemes(input.query);
+    if (!response.ok) {
+        throw new Error(`Failed to get response from Cloud Run agent: ${response.statusText}`);
+    }
+    
+    const agentResponseText = await response.text();
 
     const { output: friendlyOutput } = await friendlySchemePrompt({
-        answer: agentResponse,
+        answer: agentResponseText,
         language: input.language
     });
     
     if (!friendlyOutput || !friendlyOutput.answer) {
-      throw new Error('Could not get scheme information from the internal service.');
+      throw new Error('Could not get friendly scheme information from Gemini.');
     }
 
     let audioOutput = '';
